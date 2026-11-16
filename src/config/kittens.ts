@@ -62,6 +62,7 @@ export const KITTENS: Record<KittenId, KittenPersonality> = {
   A: {
     id: 'A',
     name: 'Bargie',
+    pronouns: SHE,
     coat: '#8c8172',
     stripe: '#423c34',
     bib: '#f1ede1',
@@ -80,6 +81,7 @@ export const KITTENS: Record<KittenId, KittenPersonality> = {
   B: {
     id: 'B',
     name: 'Beano',
+    pronouns: SHE,
     coat: '#9c8259',
     stripe: '#4a3826',
     bib: '#f3ead6',

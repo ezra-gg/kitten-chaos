@@ -1,3 +1,4 @@
+import { KITTENS, Pronouns } from '../config/kittens';
 import { ActionName, PrepTool } from '../game/prep';
 
 export type Phase = 'menu' | 'prep' | 'chaos' | 'done';
@@ -48,7 +49,28 @@ const TOOL_TIPS: Record<PrepTool, string> = {
   closeDoor: 'Click a cabinet to seal it. Anything inside stays safe. Costs 1.',
 };
 
-const HOWTO_HTML = `
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** A one-line description per play style, using the kitten's own pronouns. */
+const STYLE_BLURB: Record<string, (p: Pronouns) => string> = {
+  batter: (p) => `is patient. ${cap(p.subject)} picks ${p.possessive} moment and bats things off edges.`,
+  zoomer: (p) => `is rambunctious. ${cap(p.subject)} sprints around knocking things over.`,
+};
+
+function catLines(): string {
+  return Object.values(KITTENS)
+    .map((k) => {
+      const blurb = STYLE_BLURB[k.style]?.(k.pronouns) ?? 'is a cat.';
+      return `<li><b>${k.name}</b> ${blurb}</li>`;
+    })
+    .join('');
+}
+
+/** Built on demand so it always reflects the current kitten config (names, pronouns). */
+function buildHowTo(): string {
+  return `
   <div class="kc-howto-card">
     <h2>How to Play</h2>
     <p>Two kittens are about to wake up. Your job is to protect the breakable
@@ -70,14 +92,12 @@ const HOWTO_HTML = `
       <li><b>Door:</b> close a cabinet to seal whatever is inside.</li>
     </ul>
     <h3>The cats</h3>
-    <ul>
-      <li><b>Bargie</b> is patient. She picks her moment and bats things off edges.</li>
-      <li><b>Beano</b> is rambunctious. He sprints around knocking things over.</li>
-    </ul>
+    <ul>${catLines()}</ul>
     <p class="tip">Tip: on a tough level you are not meant to save everything.
       Protect the most valuable things first.</p>
     <div class="done"><button class="kc-btn primary kc-howto-done">Got it</button></div>
   </div>`;
+}
 
 const STYLE = `
 .kc-ui { position: fixed; inset: 0; pointer-events: none; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #f4efe6; }
@@ -254,7 +274,6 @@ export class GameUI {
     this.root.appendChild(this.topMenuBtn);
 
     this.howto = el('div', 'kc-howto');
-    this.howto.innerHTML = HOWTO_HTML;
     this.howto.addEventListener('click', (e) => {
       // Close when the backdrop or the Got it button is clicked.
       const target = e.target as HTMLElement;
@@ -326,6 +345,7 @@ export class GameUI {
   }
 
   showHowTo(): void {
+    this.howto.innerHTML = buildHowTo();
     this.howto.classList.add('show');
   }
 
