@@ -139,7 +139,8 @@ function layoutLevel(seed: number, tier: number): LevelDef {
   // Sometimes stand a tall floor lamp on the floor beside a shelf. If a kitten
   // knocks it, it can topple into that shelf and take things out with it.
   if (tier >= 3 && rng.chance(0.6)) {
-    const near = rng.pick(shelves);
+    // Stand it beside the lowest shelf, which it is tall enough to topple into.
+    const near = shelves.reduce((lo, s) => (s.y > lo.y ? s : lo), shelves[0]);
     const side = rng.chance(0.5) ? -1 : 1;
     const lx = side < 0 ? near.x - 24 : near.x + near.w + 24;
     items.push({ type: 'floorLamp', surface: 'floor', offsetX: Math.max(60, Math.min(lx, LOGICAL_WIDTH - 60)) });

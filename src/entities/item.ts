@@ -47,9 +47,9 @@ export const ITEM_CATALOG: Record<ItemType, ItemSpec> = {
   vase: { value: 30, fragile: true, w: 32, h: 54, weight: 1.4, color: '#5fa8d9', label: 'Vase', baseAppeal: 6, shiny: true, floorOk: true },
   laptop: { value: 50, fragile: true, w: 64, h: 42, weight: 3, color: '#b0b4bd', label: 'Laptop', baseAppeal: 5, shiny: true, floorOk: false },
   lamp: { value: 80, fragile: true, w: 36, h: 64, weight: 2.4, color: '#e8c85f', label: 'Desk Lamp', baseAppeal: 7, shiny: true, floorOk: false },
-  // A tall floor lamp. It is fine on the floor, but it is top-heavy, so if it is
-  // knocked over it can topple into a shelf and take things out with it.
-  floorLamp: { value: 55, fragile: true, w: 28, h: 96, weight: 2.8, color: '#d9b25f', label: 'Floor Lamp', baseAppeal: 6, shiny: false, floorOk: true },
+  // A tall floor lamp. It stands on the floor but reaches up past the shelves,
+  // so if a kitten knocks it over it can topple into a shelf and take things out.
+  floorLamp: { value: 55, fragile: true, w: 34, h: 150, weight: 2.6, color: '#d9b25f', label: 'Floor Lamp', baseAppeal: 6, shiny: false, floorOk: true },
   book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2, floorOk: false },
   // The pot is fragile, but a broken plant is half-salvageable.
   plant: { value: 8, fragile: true, breakRetain: 0.5, w: 38, h: 44, weight: 1.6, color: '#6db58a', label: 'Plant', baseAppeal: 3, dangle: true, floorOk: true },
