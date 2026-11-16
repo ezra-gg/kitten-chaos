@@ -76,7 +76,7 @@ calls. Everything runs locally in your browser.
 
 ## License
 
-Copyright (c) 2026 ezra-gg. All rights reserved.
+Copyright (c) 2026 Garrett Gregg. All rights reserved.
 
 This project is source-available for viewing on GitHub, but it is **not** open
 source. You may not copy, modify, distribute, host, or use any part of this code,
