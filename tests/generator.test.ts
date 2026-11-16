@@ -74,6 +74,7 @@ describe('generateLevel', () => {
     const perShelf = new Map<string, { left: number; right: number }[]>();
 
     for (const it of lvl.items) {
+      if (it.surface === 'floor') continue; // floor items (e.g. a floor lamp) are not on a shelf
       const s = byShelf.get(it.surface)!;
       const spec = ITEM_CATALOG[it.type];
       const centerX = s.x + it.offsetX;

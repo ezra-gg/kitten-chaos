@@ -75,11 +75,14 @@ export function buildLevel(level: LevelDef): BuiltLevel {
 
   // Implicit room boundaries (levels only declare their shelves/tables).
   const floorH = 40;
-  world.addSurface({ id: 'floor', x: 0, y: LOGICAL_HEIGHT - floorH, w: LOGICAL_WIDTH, h: floorH, kind: 'floor' });
+  const floorSpec: LevelSurface = { id: 'floor', x: 0, y: LOGICAL_HEIGHT - floorH, w: LOGICAL_WIDTH, h: floorH, kind: 'floor' };
+  world.addSurface(floorSpec);
   world.addSurface({ id: 'wall-left', x: -20, y: 0, w: 20, h: LOGICAL_HEIGHT, kind: 'wall' });
   world.addSurface({ id: 'wall-right', x: LOGICAL_WIDTH, y: 0, w: 20, h: LOGICAL_HEIGHT, kind: 'wall' });
 
   const byId = new Map<string, LevelSurface>();
+  // The floor is referenceable so items (like a floor lamp) can stand on it.
+  byId.set('floor', floorSpec);
   for (const s of level.surfaces) {
     world.addSurface(s);
     byId.set(s.id, s);

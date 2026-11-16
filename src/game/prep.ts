@@ -30,6 +30,8 @@ export class PrepController {
   tool: PrepTool = 'relocate';
   treatPurchased = false;
   onChange: (() => void) | undefined;
+  /** Fired with a short message to flash to the player (e.g. a rejected drop). */
+  onMessage: ((text: string) => void) | undefined;
 
   private history: HistoryEntry[] = [];
   private dragging: Item | null = null;
@@ -209,7 +211,17 @@ export class PrepController {
 
   private snapToSurface(it: Item): { x: number; y: number } {
     const allowFloor = it.spec.floorOk !== false;
-    const best = this.nearestSurface(it.body.position.x, it.body.position.y, it.spec.h / 2, allowFloor);
+    const best = this.pickSurface(it.body.position.x, it.body.position.y, it.spec.h / 2, allowFloor, it);
+    // What would the player have hit with no restrictions? If that differs from
+    // where it actually snapped, a rule blocked it, so explain why.
+    const aimed = this.pickSurface(it.body.position.x, it.body.position.y, it.spec.h / 2, true, it, true);
+    if (aimed && aimed !== best) {
+      if (aimed.kind === 'floor' && !allowFloor) {
+        this.onMessage?.(`${it.spec.label} doesn't belong on the floor!`);
+      } else if (this.doorOf(aimed)) {
+        this.onMessage?.('The cabinet is full.');
+      }
+    }
     if (!best) return { x: it.body.position.x, y: it.body.position.y };
     const left = best.spec.x + it.spec.w / 2;
     const right = best.spec.x + best.spec.w - it.spec.w / 2;
@@ -217,31 +229,62 @@ export class PrepController {
   }
 
   private snapPointToSurface(x: number, y: number): { x: number; y: number } {
-    const s = this.nearestSurface(x, y, 0);
+    const s = this.pickSurface(x, y, 0, true);
     if (!s) return { x, y: FLOOR_TOP };
     const left = s.spec.x + 10;
     const right = s.spec.x + s.spec.w - 10;
     return { x: Math.max(left, Math.min(x, right)), y: s.spec.y };
   }
 
-  /** A surface sitting inside a cabinet opening; not a valid relocate target. */
-  private insideCabinet(s: Surface): boolean {
+  /** The door whose opening contains this surface, if it is inside a cabinet. */
+  private doorOf(s: Surface): Door | undefined {
     const cx = s.spec.x + s.spec.w / 2;
     const cy = s.spec.y;
-    return this.world.doors.some((d) => d.contains(cx, cy));
+    return this.world.doors.find((d) => d.contains(cx, cy));
   }
 
-  private nearestSurface(x: number, y: number, halfH: number, allowFloor = true): Surface | undefined {
+  /** A player may relocate at most about a third of the room's items into a cabinet. */
+  private cabinetCapacity(): number {
+    return Math.max(1, Math.round(this.world.items.length / 3));
+  }
+
+  /**
+   * How many player-relocated items currently sit inside this door's opening
+   * (excluding one). Items placed there by the level itself do not count against
+   * the limit, so a cabinet with a pre-placed item is still usable.
+   */
+  private cabinetCount(door: Door, exclude: Item | undefined): number {
+    let n = 0;
+    for (const item of this.world.items) {
+      if (item === exclude || !item.relocated) continue;
+      if (door.contains(item.body.position.x, item.body.position.y)) n++;
+    }
+    return n;
+  }
+
+  /**
+   * Find the nearest valid surface to drop on. Honors floor eligibility and
+   * cabinet capacity unless `ignoreRules` is set (used to see what the player
+   * was aiming at before the rules moved it).
+   */
+  private pickSurface(
+    x: number,
+    y: number,
+    halfH: number,
+    allowFloor: boolean,
+    item?: Item,
+    ignoreRules = false,
+  ): Surface | undefined {
     const bottom = y + halfH;
     let best: Surface | undefined;
     let bestScore = Infinity;
     for (const s of this.world.surfaces) {
       if (s.kind === 'wall') continue;
-      // Some items (a laptop, a mug) are never set on the floor.
-      if (s.kind === 'floor' && !allowFloor) continue;
-      // Can't stuff the whole apartment into a cabinet: its shelves are off-limits
-      // as relocate targets, so a closed door only protects its intended contents.
-      if (this.insideCabinet(s)) continue;
+      if (!ignoreRules) {
+        if (s.kind === 'floor' && !allowFloor) continue; // a laptop or mug never goes on the floor
+        const door = this.doorOf(s);
+        if (door && this.cabinetCount(door, item) >= this.cabinetCapacity()) continue; // cabinet full
+      }
       const withinX = x >= s.spec.x && x <= s.spec.x + s.spec.w;
       const dy = s.spec.y - bottom;
       const horiz = withinX ? 0 : Math.min(Math.abs(x - s.spec.x), Math.abs(x - (s.spec.x + s.spec.w))) * 2;

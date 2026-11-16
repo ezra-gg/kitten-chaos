@@ -154,6 +154,10 @@ const STYLE = `
   border: 1px solid #554b6e; border-radius: 8px; padding: 7px 10px; font-size: 0.82em; line-height: 1.35;
   box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
 .kc-tip.show { display: block; }
+.kc-toast { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); z-index: 25;
+  background: rgba(232,106,124,0.96); color: #fff; padding: 9px 16px; border-radius: 10px;
+  font-weight: 600; opacity: 0; transition: opacity 0.18s; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+.kc-toast.show { opacity: 1; }
 .kc-menu { position: absolute; inset: 0; pointer-events: auto; background: rgba(20,17,28,0.97);
   display: none; flex-direction: column; align-items: center; overflow: auto; padding: 26px 16px; }
 .kc-menu.show { display: flex; }
@@ -203,6 +207,8 @@ export class GameUI {
   private readonly menu: HTMLDivElement;
   private readonly topMenuBtn: HTMLButtonElement;
   private readonly howto: HTMLDivElement;
+  private readonly toast: HTMLDivElement;
+  private toastTimer: number | undefined;
 
   constructor(parent: HTMLElement, cb: UICallbacks) {
     if (!document.getElementById('kc-style')) {
@@ -283,6 +289,9 @@ export class GameUI {
     });
     this.root.appendChild(this.howto);
 
+    this.toast = el('div', 'kc-toast');
+    this.root.appendChild(this.toast);
+
     parent.appendChild(this.root);
     this.setActiveTool('relocate');
   }
@@ -347,6 +356,14 @@ export class GameUI {
   showHowTo(): void {
     this.howto.innerHTML = buildHowTo();
     this.howto.classList.add('show');
+  }
+
+  /** Briefly flash a short message, e.g. when a drop is rejected. */
+  flashMessage(text: string): void {
+    this.toast.textContent = text;
+    this.toast.classList.add('show');
+    if (this.toastTimer !== undefined) clearTimeout(this.toastTimer);
+    this.toastTimer = window.setTimeout(() => this.toast.classList.remove('show'), 1800);
   }
 
   setTitle(name: string): void {

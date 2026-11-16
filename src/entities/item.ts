@@ -2,7 +2,7 @@ import Matter from 'matter-js';
 import { KNOCKED_OVER_ANGLE, PUTTY_RESIST } from '../config/constants';
 import type { KittenId } from '../config/kittens';
 
-export type ItemType = 'mug' | 'vase' | 'laptop' | 'lamp' | 'book' | 'plant';
+export type ItemType = 'mug' | 'vase' | 'laptop' | 'lamp' | 'floorLamp' | 'book' | 'plant';
 
 export interface ItemSpec {
   /** Score value. */
@@ -46,7 +46,10 @@ export const ITEM_CATALOG: Record<ItemType, ItemSpec> = {
   mug: { value: 10, fragile: true, w: 30, h: 28, weight: 1, color: '#d98c5f', label: 'Mug', baseAppeal: 4, shiny: false, floorOk: false },
   vase: { value: 30, fragile: true, w: 32, h: 54, weight: 1.4, color: '#5fa8d9', label: 'Vase', baseAppeal: 6, shiny: true, floorOk: true },
   laptop: { value: 50, fragile: true, w: 64, h: 42, weight: 3, color: '#b0b4bd', label: 'Laptop', baseAppeal: 5, shiny: true, floorOk: false },
-  lamp: { value: 80, fragile: true, w: 36, h: 64, weight: 2.4, color: '#e8c85f', label: 'Heirloom Lamp', baseAppeal: 7, shiny: true, floorOk: false },
+  lamp: { value: 80, fragile: true, w: 36, h: 64, weight: 2.4, color: '#e8c85f', label: 'Desk Lamp', baseAppeal: 7, shiny: true, floorOk: false },
+  // A tall floor lamp. It is fine on the floor, but it is top-heavy, so if it is
+  // knocked over it can topple into a shelf and take things out with it.
+  floorLamp: { value: 55, fragile: true, w: 28, h: 96, weight: 2.8, color: '#d9b25f', label: 'Floor Lamp', baseAppeal: 6, shiny: false, floorOk: true },
   // A stack of books or a potted plant can reasonably sit on the floor.
   book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2, floorOk: true },
   // The pot is fragile, but a broken plant is half-salvageable.

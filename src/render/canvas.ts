@@ -340,6 +340,9 @@ export class Renderer {
       case 'lamp':
         this.drawLamp(w, h, col);
         break;
+      case 'floorLamp':
+        this.drawFloorLamp(w, h, col);
+        break;
       case 'book':
         this.drawBook(w, h, col);
         break;
@@ -475,6 +478,38 @@ export class Renderer {
     // Warm glow at the shade's lower lip.
     ctx.fillStyle = 'rgba(255,240,180,0.5)';
     ctx.fillRect(-w * 0.2, top + h * 0.42 - 2, w * 0.4, 3);
+  }
+
+  private drawFloorLamp(w: number, h: number, col: string): void {
+    const ctx = this.ctx;
+    const top = -h / 2;
+    const bot = h / 2;
+    // Wide weighted base.
+    ctx.fillStyle = this.shade(col, 0.6);
+    this.roundRect(-w * 0.42, bot - h * 0.04, w * 0.84, h * 0.04, 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.22, bot - h * 0.04);
+    ctx.lineTo(w * 0.22, bot - h * 0.04);
+    ctx.lineTo(w * 0.1, bot - h * 0.1);
+    ctx.lineTo(-w * 0.1, bot - h * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    // Tall thin pole.
+    ctx.fillStyle = this.shade(col, 0.8);
+    ctx.fillRect(-w * 0.06, top + h * 0.2, w * 0.12, h * 0.72);
+    // Shade (cone) at the top.
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.16, top + h * 0.2);
+    ctx.lineTo(w * 0.16, top + h * 0.2);
+    ctx.lineTo(w * 0.5, top + h * 0.02);
+    ctx.lineTo(-w * 0.5, top + h * 0.02);
+    ctx.closePath();
+    ctx.fill();
+    // Warm glow at the shade's lower lip.
+    ctx.fillStyle = 'rgba(255,240,180,0.55)';
+    ctx.fillRect(-w * 0.16, top + h * 0.2 - 2, w * 0.32, 3);
   }
 
   private drawBook(w: number, h: number, col: string): void {

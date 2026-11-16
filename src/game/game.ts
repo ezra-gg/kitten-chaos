@@ -98,6 +98,7 @@ export class Game {
 
     this.prep = new PrepController(this.world, this.level.moves);
     this.prep.onChange = () => this.syncMoves();
+    this.prep.onMessage = (text) => this.ui.flashMessage(text);
 
     this.phase = 'prep';
     this.chaosStepsLeft = CHAOS_SECONDS * PHYSICS_HZ;
