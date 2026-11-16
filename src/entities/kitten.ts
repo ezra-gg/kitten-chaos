@@ -224,16 +224,20 @@ export class Kitten {
           return;
         }
       }
-      // Nothing to chase from here. Get bored of an empty shelf and move on,
-      // but only toward somewhere with unbroken things. If nothing is left to
-      // knock over within reach, settle down instead of pacing to a dead end.
+      // Nothing to chase from right here. Find a surface that still has unbroken
+      // things and that this shelf can launch to, then walk to the launch point
+      // before hopping. A higher or sideways shelf is often only in range from
+      // one end, so she has to reposition first. If nothing reachable is left to
+      // knock over, settle down instead of pacing a dead end.
       if (++this.boredom >= TIMING.boredomCycles) {
         this.boredom = 0;
-        const explore = this.pickExploreSurface(s);
-        if (explore) {
-          this.beginJump(explore, null);
-        } else {
+        const dest = this.pickExploreSurface(s);
+        if (!dest) {
           this.toNap();
+        } else if (this.canJumpTo(dest)) {
+          this.beginJump(dest, null);
+        } else {
+          this.walkGoalX = this.jumpOffToward(dest, s); // get to the launch end
         }
         return;
       }
@@ -242,17 +246,19 @@ export class Kitten {
   }
 
   /**
-   * The best reachable surface to hop to when the current one is exhausted.
-   * Each candidate is scored by how many unbroken items it puts in reach, so
-   * she steps toward the action and never bounces onto an empty shelf or a
-   * floor of already-broken things. Returns undefined when nothing qualifies.
+   * The best surface to hop to when the current one is exhausted, judged by
+   * whether this shelf can launch to it from its best end (not just from where
+   * she happens to stand). Each candidate is scored by how many unbroken items
+   * it puts in reach, so she steps toward the action and never bounces onto an
+   * empty shelf or a floor of already-broken things. Undefined when nothing
+   * qualifies.
    */
   private pickExploreSurface(current: Surface): Surface | undefined {
     let best: Surface | undefined;
     let bestScore = 0;
     const tied: Surface[] = [];
     for (const s of this.world.surfaces) {
-      if (s.kind === 'wall' || s === current || !this.canJumpTo(s)) continue;
+      if (s.kind === 'wall' || s === current || !this.canHopBetween(current, s)) continue;
       let score = this.intactItemsInReachFrom(s);
       if (score <= 0) continue; // a dead end leads to nothing worth batting
       if (s === this.lastSurface) score -= 0.5; // don't bounce straight back
@@ -275,16 +281,26 @@ export class Kitten {
       if (it.broken || it.puttied || this.world.isSealed(it)) continue;
       const s = findSurfaceUnder(it, this.world.surfaces);
       if (!s) continue;
-      if (s === from || this.surfacesWithinJump(from, s)) n++;
+      if (s === from || this.canHopBetween(from, s)) n++;
     }
     return n;
   }
 
-  /** Whether a cat could jump between two surfaces, by the gap between them. */
-  private surfacesWithinJump(a: Surface, b: Surface): boolean {
-    const dx = Math.max(0, a.spec.x - (b.spec.x + b.spec.w), b.spec.x - (a.spec.x + a.spec.w));
-    const dy = Math.abs(a.spec.y - b.spec.y);
-    return Math.hypot(dx, dy) <= this.cfg.jumpRange;
+  /** The x on `from` from which the jump to `dest` is shortest (the launch end). */
+  private jumpOffToward(dest: Surface, from: Surface): number {
+    const left = from.spec.x + this.w / 2;
+    const right = from.spec.x + from.spec.w - this.w / 2;
+    const destCenter = dest.spec.x + dest.spec.w / 2;
+    return Math.max(left, Math.min(destCenter, right));
+  }
+
+  /** Whether, standing at `from`'s best launch point, she could reach `dest`. */
+  private canHopBetween(from: Surface, dest: Surface): boolean {
+    const x = this.jumpOffToward(dest, from);
+    const y = from.spec.y - this.h / 2;
+    const cx = Math.max(dest.spec.x, Math.min(x, dest.spec.x + dest.spec.w));
+    const cy = dest.spec.y;
+    return Math.hypot(cx - x, cy - y) <= this.cfg.jumpRange;
   }
 
   /** Move toward a target x along a surface. Returns true when essentially there. */
