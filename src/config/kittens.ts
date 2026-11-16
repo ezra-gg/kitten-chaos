@@ -23,7 +23,7 @@ export interface Pronouns {
 
 export const SHE: Pronouns = { subject: 'she', object: 'her', possessive: 'her', reflexive: 'herself' };
 export const HE: Pronouns = { subject: 'he', object: 'him', possessive: 'his', reflexive: 'himself' };
-export const THEY: Pronouns = { subject: 'they', object: 'them', possessive: 'their', reflexive: 'themself' };
+export const THEY: Pronouns = { subject: 'they', object: 'them', possessive: 'their', reflexive: 'themselves' };
 
 export interface KittenPersonality {
   id: KittenId;

@@ -162,6 +162,15 @@ export class Kitten {
     this.pickWanderGoal();
   }
 
+  /** Curl up for a nap, e.g. when nothing reachable is left to knock over. */
+  private toNap(): void {
+    if (this.target) this.target.wobble = false;
+    this.state = 'nap';
+    this.target = null;
+    this.wiggleTimer = -1;
+    this.timer = this.rng.int(TIMING.napMin, TIMING.napMax);
+  }
+
   private pickWanderGoal(): void {
     const s = this.standingSurface();
     if (s) {
@@ -215,37 +224,67 @@ export class Kitten {
           return;
         }
       }
-      // Nothing to chase from here. Get bored of an empty shelf and move on.
+      // Nothing to chase from here. Get bored of an empty shelf and move on,
+      // but only toward somewhere with unbroken things. If nothing is left to
+      // knock over within reach, settle down instead of pacing to a dead end.
       if (++this.boredom >= TIMING.boredomCycles) {
+        this.boredom = 0;
         const explore = this.pickExploreSurface(s);
         if (explore) {
-          this.boredom = 0;
           this.beginJump(explore, null);
-          return;
+        } else {
+          this.toNap();
         }
+        return;
       }
       this.pickWanderGoal();
     }
   }
 
-  /** A reachable surface worth hopping to when the current one is exhausted. */
+  /**
+   * The best reachable surface to hop to when the current one is exhausted.
+   * Each candidate is scored by how many unbroken items it puts in reach, so
+   * she steps toward the action and never bounces onto an empty shelf or a
+   * floor of already-broken things. Returns undefined when nothing qualifies.
+   */
   private pickExploreSurface(current: Surface): Surface | undefined {
-    const reachable = this.world.surfaces.filter(
-      (s) => s.kind !== 'wall' && s !== current && this.canJumpTo(s),
-    );
-    if (!reachable.length) return undefined;
-    // Prefer a surface that still has something to knock off.
-    const withItems = reachable.filter((s) =>
-      this.world.items.some(
-        (it) => !it.broken && !it.puttied && !this.world.isSealed(it) && findSurfaceUnder(it, this.world.surfaces) === s,
-      ),
-    );
-    let pool = withItems.length ? withItems : reachable;
-    if (pool.length > 1) {
-      const notBack = pool.filter((s) => s !== this.lastSurface);
-      if (notBack.length) pool = notBack;
+    let best: Surface | undefined;
+    let bestScore = 0;
+    const tied: Surface[] = [];
+    for (const s of this.world.surfaces) {
+      if (s.kind === 'wall' || s === current || !this.canJumpTo(s)) continue;
+      let score = this.intactItemsInReachFrom(s);
+      if (score <= 0) continue; // a dead end leads to nothing worth batting
+      if (s === this.lastSurface) score -= 0.5; // don't bounce straight back
+      if (score > bestScore) {
+        bestScore = score;
+        best = s;
+        tied.length = 0;
+        tied.push(s);
+      } else if (score === bestScore) {
+        tied.push(s);
+      }
     }
-    return pool[this.rng.int(0, pool.length)];
+    return tied.length > 1 ? tied[this.rng.int(0, tied.length)] : best;
+  }
+
+  /** Count unbroken, battable items on `from` or on a surface one hop from it. */
+  private intactItemsInReachFrom(from: Surface): number {
+    let n = 0;
+    for (const it of this.world.items) {
+      if (it.broken || it.puttied || this.world.isSealed(it)) continue;
+      const s = findSurfaceUnder(it, this.world.surfaces);
+      if (!s) continue;
+      if (s === from || this.surfacesWithinJump(from, s)) n++;
+    }
+    return n;
+  }
+
+  /** Whether a cat could jump between two surfaces, by the gap between them. */
+  private surfacesWithinJump(a: Surface, b: Surface): boolean {
+    const dx = Math.max(0, a.spec.x - (b.spec.x + b.spec.w), b.spec.x - (a.spec.x + a.spec.w));
+    const dy = Math.abs(a.spec.y - b.spec.y);
+    return Math.hypot(dx, dy) <= this.cfg.jumpRange;
   }
 
   /** Move toward a target x along a surface. Returns true when essentially there. */
