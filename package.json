@@ -1,8 +1,9 @@
 {
   "name": "kitten-chaos",
   "version": "0.1.0",
-  "description": "Kitten Chaos Simulator - a browser physics puzzle game",
+  "description": "Kitten Chaos Simulator, a browser physics puzzle game",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "engines": {
     "node": ">=20"
