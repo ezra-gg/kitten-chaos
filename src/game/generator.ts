@@ -147,8 +147,11 @@ function layoutLevel(seed: number, tier: number): LevelDef {
   }
 
   // Start the kitten on a base shelf, right in the mix.
-  const startShelf = shelves[0];
-  const kittens: LevelKitten[] = [{ who: 'A', surface: startShelf.id, offsetX: 22 }];
+  // Start the kitten on a random shelf at a varied spot, not always the left end,
+  // so it does not favor the left side of every room.
+  const startShelf = rng.pick(shelves);
+  const startOffset = rng.int(Math.round(startShelf.w * 0.2), Math.round(startShelf.w * 0.8));
+  const kittens: LevelKitten[] = [{ who: 'A', surface: startShelf.id, offsetX: startOffset }];
 
   // Mix the seed's bits so nearby seeds get different names.
   const nameIdx = ((seed ^ (seed >>> 13)) * 2654435761) >>> 0;

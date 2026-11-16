@@ -23,6 +23,9 @@ export interface Point {
 /** Within this many px of a surface end, an item counts as "near the edge". */
 export const EDGE_DISTANCE = 45;
 
+/** Extra appeal of an item a kitten recently knocked over, so it goes to investigate. */
+export const INVESTIGATE_BONUS = 5;
+
 /**
  * How close an item's bottom must be to a surface's top to count as resting on
  * it. Generous enough to tolerate the physics solver letting an item sink a few
@@ -101,8 +104,10 @@ export function scoreItem(
   const distancePenalty = Math.hypot(dx, dy) * weights.distance;
 
   const puttyPenalty = item.battedFailures > 0 ? item.battedFailures * weights.putty : 0;
+  // A recently knocked item is interesting, so the cat goes back to poke at it.
+  const investigateBonus = item.investigateTimer > 0 ? INVESTIGATE_BONUS : 0;
 
-  return base + edgeBonus + shinyBonus + dangleBonus - distancePenalty - puttyPenalty;
+  return base + edgeBonus + shinyBonus + dangleBonus + investigateBonus - distancePenalty - puttyPenalty;
 }
 
 /**

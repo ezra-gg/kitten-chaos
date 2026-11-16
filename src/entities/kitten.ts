@@ -42,6 +42,8 @@ export class Kitten {
   private batPause = 0;
   private zoomDir: 1 | -1 = 1;
   private zoomTimer = 0;
+  private boredom = 0;
+  private lastSurface: Surface | undefined;
   private lure: Attractor | null = null;
   private distractPhase: 'travel' | 'hold' = 'travel';
   private holdTimer = 0;
@@ -200,6 +202,7 @@ export class Kitten {
         (it) => this.canReach(it, s),
       );
       if (target) {
+        this.boredom = 0;
         const ts = findSurfaceUnder(target, this.world.surfaces);
         if (ts === s) {
           this.target = target;
@@ -212,8 +215,37 @@ export class Kitten {
           return;
         }
       }
+      // Nothing to chase from here. Get bored of an empty shelf and move on.
+      if (++this.boredom >= TIMING.boredomCycles) {
+        const explore = this.pickExploreSurface(s);
+        if (explore) {
+          this.boredom = 0;
+          this.beginJump(explore, null);
+          return;
+        }
+      }
       this.pickWanderGoal();
     }
+  }
+
+  /** A reachable surface worth hopping to when the current one is exhausted. */
+  private pickExploreSurface(current: Surface): Surface | undefined {
+    const reachable = this.world.surfaces.filter(
+      (s) => s.kind !== 'wall' && s !== current && this.canJumpTo(s),
+    );
+    if (!reachable.length) return undefined;
+    // Prefer a surface that still has something to knock off.
+    const withItems = reachable.filter((s) =>
+      this.world.items.some(
+        (it) => !it.broken && !it.puttied && !this.world.isSealed(it) && findSurfaceUnder(it, this.world.surfaces) === s,
+      ),
+    );
+    let pool = withItems.length ? withItems : reachable;
+    if (pool.length > 1) {
+      const notBack = pool.filter((s) => s !== this.lastSurface);
+      if (notBack.length) pool = notBack;
+    }
+    return pool[this.rng.int(0, pool.length)];
   }
 
   /** Move toward a target x along a surface. Returns true when essentially there. */
@@ -231,6 +263,7 @@ export class Kitten {
   }
 
   private beginJump(targetSurface: Surface, target: Item | null): void {
+    this.lastSurface = this.standingSurface(); // remember where we came from
     const toX = target
       ? Math.max(targetSurface.spec.x + this.w / 2, Math.min(target.body.position.x, targetSurface.spec.x + targetSurface.spec.w - this.w / 2))
       : targetSurface.spec.x + targetSurface.spec.w / 2;
@@ -259,6 +292,7 @@ export class Kitten {
     this.setPos(x, y);
     if (u >= 1) {
       this.jump = null;
+      this.boredom = 0; // fresh surface, fresh start
       if (this.target && !this.target.broken) {
         this.state = 'stalk';
         this.wiggleTimer = -1;
@@ -490,6 +524,7 @@ export class Kitten {
     Matter.Body.setVelocity(item.body, { x: dir * knock, y: -1.5 / Math.sqrt(item.spec.weight) });
     Matter.Sleeping.set(item.body, false);
     item.lastCulprit = this.who;
+    item.investigateTimer = 180; // stays interesting for ~3s so the cat follows it
     return false;
   }
 }

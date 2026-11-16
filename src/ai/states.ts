@@ -29,4 +29,6 @@ export const TIMING = {
   zoomSpeedMul: 2.8,
   /** A zoomies body-slam's knock, relative to a deliberate bat. */
   zoomBumpFactor: 0.75,
+  /** Fruitless wander cycles on an empty shelf before the kitten hops elsewhere. */
+  boredomCycles: 2,
 } as const;

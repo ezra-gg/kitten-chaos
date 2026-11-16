@@ -111,6 +111,7 @@ export class PhysicsWorld {
       item.vxBeforeStep = item.body.velocity.x;
       item.vyBeforeStep = item.body.velocity.y;
       if (item.bumpCooldown > 0) item.bumpCooldown--;
+      if (item.investigateTimer > 0) item.investigateTimer--;
     }
     Matter.Engine.update(this.engine, PHYSICS_STEP_MS);
   }

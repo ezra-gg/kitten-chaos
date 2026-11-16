@@ -88,6 +88,8 @@ export class Item {
   puttyHP = 0;
   /** Cooldown (steps) before a zoomies sprint can bump this item again. */
   bumpCooldown = 0;
+  /** Steps of heightened kitten interest after being knocked, for investigating. */
+  investigateTimer = 0;
   /** True while a kitten is winding up to bat it, for a telegraphing wobble. */
   wobble = false;
   /**
