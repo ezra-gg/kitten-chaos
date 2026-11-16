@@ -89,7 +89,11 @@ export class Game {
   private loadLevel(index: number): void {
     this.levelIndex = index;
     this.renderer.camOverlay = false; // back home: prep view, no cam
-    const built = buildLevel(this.levelAt(index));
+    // A fresh random chaos seed every load (including retries), so the kittens
+    // take a different path each time instead of replaying the same run. The
+    // auditor verifies levels stay fair across a spread of seeds.
+    const runSeed = (Math.floor(Math.random() * 0x7fffffff) ^ Date.now()) >>> 0;
+    const built = buildLevel(this.levelAt(index), runSeed);
     this.world = built.world;
     this.level = built.level;
     this.world.onBreak = ({ item, speed }) => {

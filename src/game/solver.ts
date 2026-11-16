@@ -3,10 +3,26 @@ import { ACTION_COST, CHAOS_SECONDS, LOGICAL_HEIGHT, LOGICAL_WIDTH, PHYSICS_HZ }
 import { Attractor } from '../entities/attractor';
 import { Item } from '../entities/item';
 import { PhysicsWorld } from '../engine/physics';
+import { Rng } from '../engine/rng';
 import { buildLevel, LevelDef } from './levels';
 import { computeScore } from './scoring';
 
 const FLOOR_TOP = LOGICAL_HEIGHT - 40;
+
+/**
+ * How many random chaos seeds each plan is judged against. Play picks a fresh
+ * random seed every time, so a level is only "fair" if a single prep survives a
+ * spread of seeds, not just the level's own. We take the worst case.
+ */
+const AUDIT_SEEDS = 5;
+
+/** A deterministic spread of chaos seeds for a level, including its own. */
+function auditSeeds(level: LevelDef): number[] {
+  const r = new Rng((level.seed ^ 0x9e3779b9) >>> 0);
+  const seeds = [level.seed];
+  while (seeds.length < AUDIT_SEEDS) seeds.push(r.int(0, 0x7fffffff));
+  return seeds;
+}
 
 /** A prep plan to try: it mutates a freshly-built world and reports moves used. */
 interface Plan {
@@ -190,8 +206,9 @@ function plansFor(level: LevelDef): Plan[] {
   return plans;
 }
 
-function runPlan(level: LevelDef, plan: Plan): SolveResult | null {
-  const { world } = buildLevel(level);
+/** Run a plan against one chaos seed. */
+function runPlanSeed(level: LevelDef, plan: Plan, seed: number): SolveResult | null {
+  const { world } = buildLevel(level, seed);
   const moves = plan.apply(world, level);
   if (moves === null || moves > level.moves) return null;
 
@@ -212,12 +229,29 @@ function runPlan(level: LevelDef, plan: Plan): SolveResult | null {
   return { stars: r.stars, percent: r.percent, moves, name: plan.name };
 }
 
+/**
+ * Judge a plan by its WORST outcome across the audit seeds. A prep only counts
+ * as a 3-star solution if it holds up no matter which random chaos play rolls.
+ */
+function runPlan(level: LevelDef, plan: Plan, seeds: number[]): SolveResult | null {
+  let worst: SolveResult | null = null;
+  for (const seed of seeds) {
+    const res = runPlanSeed(level, plan, seed);
+    if (!res) return null; // over budget or inapplicable; same on every seed
+    if (!worst || res.stars < worst.stars || (res.stars === worst.stars && res.percent < worst.percent)) {
+      worst = res;
+    }
+  }
+  return worst;
+}
+
 /** Best prep found for a level, plus the no-prep baseline. */
 export function auditLevel(level: LevelDef): LevelAudit {
+  const seeds = auditSeeds(level);
   let noPrep: SolveResult = { stars: 0, percent: 0, moves: 0, name: 'no-prep' };
   let best: SolveResult = noPrep;
   for (const plan of plansFor(level)) {
-    const res = runPlan(level, plan);
+    const res = runPlan(level, plan, seeds);
     if (!res) continue;
     if (plan.name === 'no-prep') noPrep = res;
     if (res.stars > best.stars || (res.stars === best.stars && res.moves < best.moves)) best = res;

@@ -68,9 +68,14 @@ export interface BuiltLevel {
 
 const KITTEN_HALF_HEIGHT = 14;
 
-/** Construct a fresh physics world from a level definition. */
-export function buildLevel(level: LevelDef): BuiltLevel {
-  const rng = new Rng(level.seed);
+/**
+ * Construct a fresh physics world from a level definition. Pass `runSeed` to
+ * drive the chaos from a different random stream than the level's own seed, so
+ * each playthrough unfolds differently. Omit it (solver, generator) for the
+ * deterministic baseline keyed to the level seed.
+ */
+export function buildLevel(level: LevelDef, runSeed?: number): BuiltLevel {
+  const rng = new Rng(runSeed ?? level.seed);
   const world = new PhysicsWorld();
 
   // Implicit room boundaries (levels only declare their shelves/tables).
