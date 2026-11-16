@@ -84,3 +84,7 @@ its assets, or its design, in whole or in part, without the author's explicit
 prior written permission. All rights are reserved, including the right to release
 a commercial version in the future. See the [LICENSE](./LICENSE) file for the full
 terms.
+
+Third-party components and their licenses are tracked in
+[THIRD-PARTY-LICENSES.md](./THIRD-PARTY-LICENSES.md). Everything that ships is
+original work plus one permissively licensed library (Matter.js, MIT).
