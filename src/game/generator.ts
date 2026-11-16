@@ -60,7 +60,7 @@ function shelfConflicts(cand: LevelSurface, shelves: LevelSurface[]): boolean {
  */
 function layoutLevel(seed: number, tier: number): LevelDef {
   const rng = new Rng(seed);
-  const shelfCount = Math.min(4, 2 + Math.floor(tier / 2));
+  const shelfCount = Math.min(3, 2 + Math.floor(tier / 3));
   const baseCount = Math.max(1, Math.ceil(shelfCount / 2));
   const shelves: LevelSurface[] = [];
 
@@ -117,7 +117,7 @@ function layoutLevel(seed: number, tier: number): LevelDef {
   const pool = typePool(tier);
   const items: LevelItem[] = [];
   for (const s of shelves) {
-    const want = rng.int(2, Math.min(3, 1 + tier) + 1);
+    const want = rng.int(1, 2 + Math.floor(tier / 4));
     const margin = 10;
     const usable = s.w - 2 * margin;
     const placed: { left: number; right: number }[] = [];
@@ -139,11 +139,11 @@ function layoutLevel(seed: number, tier: number): LevelDef {
   // Sometimes stand a tall floor lamp on the floor beside a shelf. If a kitten
   // knocks it, it can topple into that shelf and take things out with it.
   if (tier >= 3 && rng.chance(0.6)) {
-    // Stand it beside the lowest shelf, which it is tall enough to topple into.
+    // Stand it tight against the lowest shelf, which it is tall enough to topple into.
     const near = shelves.reduce((lo, s) => (s.y > lo.y ? s : lo), shelves[0]);
     const side = rng.chance(0.5) ? -1 : 1;
-    const lx = side < 0 ? near.x - 24 : near.x + near.w + 24;
-    items.push({ type: 'floorLamp', surface: 'floor', offsetX: Math.max(60, Math.min(lx, LOGICAL_WIDTH - 60)) });
+    const lx = side < 0 ? near.x - 8 : near.x + near.w + 8;
+    items.push({ type: 'floorLamp', surface: 'floor', offsetX: Math.max(44, Math.min(lx, LOGICAL_WIDTH - 44)) });
   }
 
   // Start the kitten on a base shelf, right in the mix.

@@ -49,7 +49,7 @@ export const ITEM_CATALOG: Record<ItemType, ItemSpec> = {
   lamp: { value: 80, fragile: true, w: 36, h: 64, weight: 2.4, color: '#e8c85f', label: 'Desk Lamp', baseAppeal: 7, shiny: true, floorOk: false },
   // A tall floor lamp. It stands on the floor but reaches up past the shelves,
   // so if a kitten knocks it over it can topple into a shelf and take things out.
-  floorLamp: { value: 55, fragile: true, w: 34, h: 150, weight: 2.6, color: '#d9b25f', label: 'Floor Lamp', baseAppeal: 6, shiny: false, floorOk: true },
+  floorLamp: { value: 55, fragile: true, w: 36, h: 182, weight: 2.6, color: '#d9b25f', label: 'Floor Lamp', baseAppeal: 6, shiny: false, floorOk: true },
   book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2, floorOk: false },
   // The pot is fragile, but a broken plant is half-salvageable.
   plant: { value: 8, fragile: true, breakRetain: 0.5, w: 38, h: 44, weight: 1.6, color: '#6db58a', label: 'Plant', baseAppeal: 3, dangle: true, floorOk: true },

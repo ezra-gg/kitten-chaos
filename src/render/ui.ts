@@ -34,7 +34,7 @@ export interface ResultData {
 }
 
 const TOOL_LABELS: Record<PrepTool, string> = {
-  relocate: '↔ Relocate',
+  relocate: '↔ Move Object',
   putty: '• Putty (1)',
   box: '📦 Box (2)',
   toy: '🐭 Toy (1)',
