@@ -41,10 +41,14 @@ export const STAR_THRESHOLDS = { one: 0.5, two: 0.75, three: 1.0 } as const;
 export const PUTTY_RESIST = 2;
 
 // --- Break detection.
-// A fragile item shatters if its approach speed at impact exceeds this.
-// Matter's body.speed is in px per 60 Hz step; a short drop is ~4-6, a fall to
-// the floor is ~10+. Tune here.
+// A fragile item shatters if its impact speed along the collision normal exceeds
+// this. This applies to falls onto a surface and hard slams into a wall. Matter's
+// speeds are px per 60 Hz step; a short drop is ~4-6, a fall to the floor is ~10+.
 export const BREAK_SPEED_THRESHOLD = 6.5;
+// Two items must crash into each other a good deal faster than that to break,
+// so gentle bumps and clustered items on the floor stay safe. Only a genuinely
+// fast collision (for example a heavy item knocked into another) shatters.
+export const ITEM_CRASH_THRESHOLD = 10.5;
 // Sturdy items never break but count as "knocked over" if they rotate past this
 // many radians from upright (used from M4 onward for the smaller penalty).
 export const KNOCKED_OVER_ANGLE = 0.7;

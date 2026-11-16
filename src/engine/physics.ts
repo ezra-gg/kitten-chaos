@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { BREAK_SPEED_THRESHOLD, GRAVITY_Y, PHYSICS_STEP_MS } from '../config/constants';
+import { BREAK_SPEED_THRESHOLD, GRAVITY_Y, ITEM_CRASH_THRESHOLD, PHYSICS_STEP_MS } from '../config/constants';
 import { Attractor } from '../entities/attractor';
 import { Door } from '../entities/door';
 import { Item, itemOf } from '../entities/item';
@@ -142,8 +142,10 @@ export class PhysicsWorld {
     const ovy = striker ? striker.vyBeforeStep : 0;
     // Relative approach velocity projected onto the contact normal.
     const impact = Math.abs((item.vxBeforeStep - ovx) * normal.x + (item.vyBeforeStep - ovy) * normal.y);
+    // Item-to-item crashes need a much faster hit than falls or wall slams.
+    const threshold = striker ? ITEM_CRASH_THRESHOLD : BREAK_SPEED_THRESHOLD;
 
-    if (impact >= BREAK_SPEED_THRESHOLD) {
+    if (impact >= threshold) {
       // Chain attribution: whoever set the striker in motion owns this break too.
       if (striker?.lastCulprit) item.lastCulprit = striker.lastCulprit;
       item.shatter();

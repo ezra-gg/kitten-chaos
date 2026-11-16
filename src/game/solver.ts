@@ -88,12 +88,13 @@ function placeToyNearItems(world: PhysicsWorld): void {
 function relocateFar(world: PhysicsWorld, items: Item[]): number {
   const cx = kittenCentroidX(world);
   const farLeft = cx > LOGICAL_WIDTH / 2;
-  let x = farLeft ? 60 : LOGICAL_WIDTH - 60;
+  // Keep items a bit off the side walls so a kitten cannot slam them into one.
+  let x = farLeft ? 100 : LOGICAL_WIDTH - 100;
   const step = farLeft ? 74 : -74;
   let moved = 0;
   for (const it of items) {
     if (it.spec.floorOk === false) continue; // never set these on the floor
-    Matter.Body.setPosition(it.body, { x: Math.max(44, Math.min(x, LOGICAL_WIDTH - 44)), y: FLOOR_TOP - it.spec.h / 2 - 1 });
+    Matter.Body.setPosition(it.body, { x: Math.max(90, Math.min(x, LOGICAL_WIDTH - 90)), y: FLOOR_TOP - it.spec.h / 2 - 1 });
     it.relocated = true;
     x += step;
     moved++;
