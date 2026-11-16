@@ -1,0 +1,22 @@
+{
+  "id": "06-home-office",
+  "name": "Home Office",
+  "seed": 606,
+  "moves": 4,
+  "surfaces": [
+    { "id": "shelf1", "x": 120, "y": 340, "w": 280, "h": 14, "kind": "shelf" },
+    { "id": "cab", "x": 572, "y": 392, "w": 160, "h": 12, "kind": "shelf" }
+  ],
+  "doors": [{ "id": "cabinet", "x": 560, "y": 250, "w": 185, "h": 158 }],
+  "items": [
+    { "type": "vase", "surface": "shelf1", "offsetX": 60 },
+    { "type": "mug", "surface": "shelf1", "offsetX": 160 },
+    { "type": "plant", "surface": "shelf1", "offsetX": 235 },
+    { "type": "laptop", "surface": "cab", "offsetX": 48 }
+  ],
+  "kittens": [
+    { "who": "A", "surface": "shelf1", "offsetX": 22 },
+    { "who": "B", "x": 820, "y": 486 }
+  ],
+  "actionsAvailable": ["relocate", "putty", "closeDoor"]
+}

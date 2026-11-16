@@ -1,0 +1,17 @@
+{
+  "id": "01-first-night",
+  "name": "First Night",
+  "seed": 1001,
+  "moves": 3,
+  "surfaces": [
+    { "id": "shelf1", "x": 330, "y": 330, "w": 300, "h": 14, "kind": "shelf" }
+  ],
+  "doors": [],
+  "items": [
+    { "type": "book", "surface": "shelf1", "offsetX": 40 },
+    { "type": "mug", "surface": "shelf1", "offsetX": 150 },
+    { "type": "vase", "surface": "shelf1", "offsetX": 262 }
+  ],
+  "kittens": [{ "who": "A", "surface": "shelf1", "offsetX": 24 }],
+  "actionsAvailable": ["relocate"]
+}

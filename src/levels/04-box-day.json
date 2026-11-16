@@ -1,0 +1,22 @@
+{
+  "id": "04-box-day",
+  "name": "Box Day",
+  "seed": 404,
+  "moves": 4,
+  "surfaces": [
+    { "id": "shelf1", "x": 150, "y": 330, "w": 260, "h": 14, "kind": "shelf" },
+    { "id": "shelf2", "x": 560, "y": 300, "w": 240, "h": 14, "kind": "shelf" }
+  ],
+  "doors": [],
+  "items": [
+    { "type": "mug", "surface": "shelf1", "offsetX": 50 },
+    { "type": "vase", "surface": "shelf1", "offsetX": 180 },
+    { "type": "laptop", "surface": "shelf2", "offsetX": 40 },
+    { "type": "lamp", "surface": "shelf2", "offsetX": 160 }
+  ],
+  "kittens": [
+    { "who": "A", "surface": "shelf1", "offsetX": 22 },
+    { "who": "B", "surface": "shelf2", "offsetX": 20 }
+  ],
+  "actionsAvailable": ["relocate", "putty", "box"]
+}

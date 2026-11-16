@@ -1,0 +1,20 @@
+{
+  "id": "02-bookshelf",
+  "name": "The Bookshelf",
+  "seed": 4242,
+  "moves": 5,
+  "surfaces": [
+    { "id": "shelf1", "x": 120, "y": 370, "w": 250, "h": 14, "kind": "shelf" },
+    { "id": "shelf2", "x": 470, "y": 260, "w": 250, "h": 14, "kind": "shelf" }
+  ],
+  "doors": [],
+  "items": [
+    { "type": "mug", "surface": "shelf1", "offsetX": 60 },
+    { "type": "vase", "surface": "shelf1", "offsetX": 200 },
+    { "type": "book", "surface": "shelf2", "offsetX": 50 },
+    { "type": "laptop", "surface": "shelf2", "offsetX": 140 },
+    { "type": "lamp", "surface": "shelf2", "offsetX": 212 }
+  ],
+  "kittens": [{ "who": "A", "surface": "shelf1", "offsetX": 24 }],
+  "actionsAvailable": ["relocate", "putty"]
+}

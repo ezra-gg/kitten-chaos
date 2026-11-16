@@ -1,0 +1,22 @@
+{
+  "id": "03-kitchen-counter",
+  "name": "Kitchen Counter",
+  "seed": 303,
+  "moves": 4,
+  "surfaces": [
+    { "id": "counter", "x": 280, "y": 288, "w": 400, "h": 16, "kind": "shelf" }
+  ],
+  "doors": [],
+  "items": [
+    { "type": "vase", "surface": "counter", "offsetX": 26 },
+    { "type": "mug", "surface": "counter", "offsetX": 96 },
+    { "type": "plant", "surface": "counter", "offsetX": 200 },
+    { "type": "mug", "surface": "counter", "offsetX": 300 },
+    { "type": "vase", "surface": "counter", "offsetX": 374 }
+  ],
+  "kittens": [
+    { "who": "A", "surface": "counter", "offsetX": 16 },
+    { "who": "B", "surface": "counter", "offsetX": 384 }
+  ],
+  "actionsAvailable": ["relocate", "putty"]
+}

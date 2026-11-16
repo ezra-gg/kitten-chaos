@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.vite/
+
+# Local planning docs, kept out of the shared repo.
+kitten-chaos-project-plan.md
+ideas-for-expansions.md

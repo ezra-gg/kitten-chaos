@@ -1,0 +1,22 @@
+{
+  "id": "05-dinner-party",
+  "name": "Dinner Party Prep",
+  "seed": 505,
+  "moves": 5,
+  "surfaces": [
+    { "id": "table", "x": 200, "y": 340, "w": 560, "h": 16, "kind": "shelf" }
+  ],
+  "doors": [],
+  "items": [
+    { "type": "vase", "surface": "table", "offsetX": 50 },
+    { "type": "mug", "surface": "table", "offsetX": 150 },
+    { "type": "vase", "surface": "table", "offsetX": 250 },
+    { "type": "mug", "surface": "table", "offsetX": 360 },
+    { "type": "vase", "surface": "table", "offsetX": 470 }
+  ],
+  "kittens": [
+    { "who": "A", "surface": "table", "offsetX": 22 },
+    { "who": "B", "surface": "table", "offsetX": 538 }
+  ],
+  "actionsAvailable": ["relocate", "putty", "toy", "treat"]
+}
