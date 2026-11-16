@@ -40,6 +40,14 @@ const TOOL_LABELS: Record<PrepTool, string> = {
   closeDoor: '🚪 Door (1)',
 };
 
+const TOOL_TIPS: Record<PrepTool, string> = {
+  relocate: 'Drag an item to a safer spot. The first move of an item costs 1.',
+  putty: 'Stick an item down so the cats leave it alone. Costs 1.',
+  box: 'Drop a box on the floor. A kitten climbs in and stays a while. Costs 2.',
+  toy: 'Place a toy that lures the nearest kitten away to play. Costs 1.',
+  closeDoor: 'Click a cabinet to seal it. Anything inside stays safe. Costs 1.',
+};
+
 const STYLE = `
 .kc-ui { position: fixed; inset: 0; pointer-events: none; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #f4efe6; }
 .kc-ui button { pointer-events: auto; cursor: pointer; font: inherit; }
@@ -87,6 +95,12 @@ const STYLE = `
 .kc-hint { position: absolute; bottom: 74px; left: 50%; transform: translateX(-50%);
   font-size: 0.85em; color: #b8b0c8; background: rgba(27,23,38,0.6); padding: 4px 10px; border-radius: 8px; max-width: 90vw; text-align: center; }
 .kc-hint.hidden { display: none; }
+.kc-bar.kc-chaosbar { top: 14px; bottom: auto; }
+.kc-tip { position: absolute; pointer-events: none; z-index: 20; display: none; max-width: 240px;
+  transform: translate(-50%, -100%); background: rgba(20,17,28,0.97); color: #f4efe6;
+  border: 1px solid #554b6e; border-radius: 8px; padding: 7px 10px; font-size: 0.82em; line-height: 1.35;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+.kc-tip.show { display: block; }
 .kc-menu { position: absolute; inset: 0; pointer-events: auto; background: rgba(20,17,28,0.97);
   display: none; flex-direction: column; align-items: center; overflow: auto; padding: 26px 16px; }
 .kc-menu.show { display: flex; }
@@ -113,7 +127,7 @@ export class GameUI {
   private readonly chaosBar: HTMLDivElement;
   private readonly timerEl: HTMLDivElement;
   private readonly banner: HTMLDivElement;
-  private readonly hint: HTMLDivElement;
+  private readonly tip: HTMLDivElement;
   private readonly toolButtons: Record<PrepTool, HTMLButtonElement>;
   private readonly treatBtn: HTMLButtonElement;
   private readonly speedButtons: Record<string, HTMLButtonElement>;
@@ -160,8 +174,8 @@ export class GameUI {
     );
     this.root.appendChild(this.prepBar);
 
-    // Chaos toolbar.
-    this.chaosBar = el('div', 'kc-bar hidden');
+    // Chaos toolbar, pinned to the top so it never covers the room.
+    this.chaosBar = el('div', 'kc-bar kc-chaosbar hidden');
     this.timerEl = el('div', 'kc-timer');
     const s1 = button('1x', 'kc-btn active', () => cb.onSpeed(1));
     const s2 = button('2x', 'kc-btn', () => cb.onSpeed(2));
@@ -172,8 +186,14 @@ export class GameUI {
     this.chaosBar.append(this.timerEl, sep(), s1, s2, skip, this.treatDeployBtn);
     this.root.appendChild(this.chaosBar);
 
-    this.hint = el('div', 'kc-hint');
-    this.root.appendChild(this.hint);
+    // Hover tooltips so help text is available on demand, not always on screen.
+    this.tip = el('div', 'kc-tip');
+    this.root.appendChild(this.tip);
+    for (const key of Object.keys(this.toolButtons) as PrepTool[]) {
+      this.attachTip(this.toolButtons[key], TOOL_TIPS[key]);
+    }
+    this.attachTip(this.treatBtn, 'Buy a treat. During chaos a button calls both kittens to the bowl for 4 seconds. Costs 2.');
+    this.attachTip(undoBtn, 'Undo your last action and get the move back.');
 
     this.banner = el('div', 'kc-banner');
     this.root.appendChild(this.banner);
@@ -239,11 +259,18 @@ export class GameUI {
       this.toolButtons[key].style.display = actions.includes(key) ? '' : 'none';
     }
     this.treatBtn.style.display = actions.includes('treat') ? '' : 'none';
-    const hints: string[] = ['Drag items to safety'];
-    if (actions.includes('putty')) hints.push('Putty sticks them down');
-    if (actions.includes('box')) hints.push('Box/Toy lure a kitten');
-    if (actions.includes('treat')) hints.push('Treat pulls both mid-chaos');
-    this.hint.textContent = hints.join('  /  ');
+  }
+
+  /** Show a tooltip above an element while the pointer hovers it. */
+  private attachTip(target: HTMLElement, text: string): void {
+    target.addEventListener('mouseenter', () => {
+      const r = target.getBoundingClientRect();
+      this.tip.textContent = text;
+      this.tip.style.left = `${r.left + r.width / 2}px`;
+      this.tip.style.top = `${r.top - 8}px`;
+      this.tip.classList.add('show');
+    });
+    target.addEventListener('mouseleave', () => this.tip.classList.remove('show'));
   }
 
   setActiveTool(tool: PrepTool): void {
@@ -281,10 +308,10 @@ export class GameUI {
   setPhase(phase: Phase): void {
     this.prepBar.classList.toggle('hidden', phase !== 'prep');
     this.chaosBar.classList.toggle('hidden', phase !== 'chaos');
-    this.hint.classList.toggle('hidden', phase !== 'prep');
     this.movesEl.style.display = phase === 'done' || phase === 'menu' ? 'none' : '';
     this.titleEl.style.display = phase === 'menu' ? 'none' : '';
     this.topMenuBtn.classList.toggle('hidden', !(phase === 'prep' || phase === 'chaos'));
+    this.tip.classList.remove('show');
     if (phase !== 'done') this.banner.classList.remove('show');
   }
 
