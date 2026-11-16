@@ -49,11 +49,11 @@ describe('generateLevel', () => {
     expect(JSON.stringify(a.surfaces)).not.toEqual(JSON.stringify(b.surfaces));
   });
 
-  it('keeps the move budget in [3, 6]', () => {
+  it('keeps the move budget in [3, 8]', () => {
     for (let seed = 7000; seed < 7000 + 6 * 137; seed += 137) {
       const lvl = generateLevel(seed, 3);
       expect(lvl.moves).toBeGreaterThanOrEqual(3);
-      expect(lvl.moves).toBeLessThanOrEqual(6);
+      expect(lvl.moves).toBeLessThanOrEqual(8);
     }
   });
 

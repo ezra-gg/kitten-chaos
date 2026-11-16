@@ -8,8 +8,8 @@
   ],
   "doors": [],
   "items": [
-    { "type": "book", "surface": "shelf1", "offsetX": 40 },
-    { "type": "plant", "surface": "shelf1", "offsetX": 150 },
+    { "type": "plant", "surface": "shelf1", "offsetX": 40 },
+    { "type": "vase", "surface": "shelf1", "offsetX": 150 },
     { "type": "vase", "surface": "shelf1", "offsetX": 262 }
   ],
   "kittens": [{ "who": "A", "surface": "shelf1", "offsetX": 24 }],

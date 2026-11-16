@@ -43,6 +43,16 @@ function floorReachable(s: LevelSurface): boolean {
   return FLOOR_TOP - s.y <= JUMP_RANGE;
 }
 
+/** Minimum vertical gap between shelves that overlap horizontally. */
+const MIN_VGAP = 58;
+
+/** Two shelves that overlap in x and sit too close vertically look like one broken shelf. */
+function shelfConflicts(cand: LevelSurface, shelves: LevelSurface[]): boolean {
+  return shelves.some(
+    (s) => cand.x < s.x + s.w && s.x < cand.x + cand.w && Math.abs(cand.y - s.y) < MIN_VGAP,
+  );
+}
+
 /**
  * Generate a deterministic, reachable room for the given seed and tier. The
  * returned level has a provisional budget that is then calibrated by simulation
@@ -54,33 +64,52 @@ function layoutLevel(seed: number, tier: number): LevelDef {
   const baseCount = Math.max(1, Math.ceil(shelfCount / 2));
   const shelves: LevelSurface[] = [];
 
-  // Base shelves: low enough to hop onto from the floor.
+  // Base shelves: low enough to hop onto from the floor. Retry to avoid shelves
+  // that overlap and clip into each other.
   for (let i = 0; i < baseCount; i++) {
-    const w = rng.int(190, 270);
-    const x = rng.int(SIDE_MARGIN, LOGICAL_WIDTH - SIDE_MARGIN - w);
-    const y = rng.int(FLOOR_TOP - JUMP_RANGE + 8, FLOOR_TOP - 90); // guaranteed floor-reachable
-    shelves.push({ id: `shelf${shelves.length + 1}`, x, y, w, h: 14, kind: 'shelf' });
+    let cand: LevelSurface | undefined;
+    for (let t = 0; t < 20; t++) {
+      const w = rng.int(190, 270);
+      const x = rng.int(SIDE_MARGIN, LOGICAL_WIDTH - SIDE_MARGIN - w);
+      const y = rng.int(FLOOR_TOP - JUMP_RANGE + 8, FLOOR_TOP - 90); // guaranteed floor-reachable
+      cand = { id: `shelf${shelves.length + 1}`, x, y, w, h: 14, kind: 'shelf' };
+      if (!shelfConflicts(cand, shelves)) break;
+    }
+    shelves.push(cand!);
   }
 
   // Upper shelves: placed near an existing shelf so they're reachable by a hop.
   while (shelves.length < shelfCount) {
-    const anchor = rng.pick(shelves);
-    const w = rng.int(170, 240);
-    const dyUp = rng.int(70, 108);
-    const y = Math.max(170, anchor.y - dyUp);
-    // Keep horizontal overlap with the anchor so the jump distance stays in range.
-    const minX = Math.max(SIDE_MARGIN, anchor.x - 110);
-    const maxX = Math.min(LOGICAL_WIDTH - SIDE_MARGIN - w, anchor.x + anchor.w - 60);
-    const x = maxX > minX ? rng.int(minX, maxX) : minX;
-    shelves.push({ id: `shelf${shelves.length + 1}`, x, y, w, h: 14, kind: 'shelf' });
+    let cand: LevelSurface | undefined;
+    for (let t = 0; t < 20; t++) {
+      const anchor = rng.pick(shelves);
+      const w = rng.int(170, 240);
+      const dyUp = rng.int(72, 108);
+      const y = Math.max(170, anchor.y - dyUp);
+      // Keep horizontal overlap with the anchor so the jump distance stays in range.
+      const minX = Math.max(SIDE_MARGIN, anchor.x - 110);
+      const maxX = Math.min(LOGICAL_WIDTH - SIDE_MARGIN - w, anchor.x + anchor.w - 60);
+      const x = maxX > minX ? rng.int(minX, maxX) : minX;
+      cand = { id: `shelf${shelves.length + 1}`, x, y, w, h: 14, kind: 'shelf' };
+      if (!shelfConflicts(cand, shelves)) break;
+    }
+    shelves.push(cand!);
   }
 
-  // Repair: any shelf not reachable (from floor or another shelf) is lowered
-  // into the floor-reachable band so no items are trivially safe.
+  // Repair: any shelf not reachable (from floor or another shelf) is moved into
+  // the floor-reachable band so no items are trivially safe. Pick a spot that
+  // does not clip into another shelf.
   for (const s of shelves) {
     const reachable =
       floorReachable(s) || shelves.some((o) => o !== s && floorReachable(o) && surfaceGap(s, o) <= JUMP_RANGE);
-    if (!reachable) s.y = rng.int(FLOOR_TOP - JUMP_RANGE + 8, FLOOR_TOP - 90);
+    if (!reachable) {
+      const others = shelves.filter((o) => o !== s);
+      for (let t = 0; t < 24; t++) {
+        s.y = rng.int(FLOOR_TOP - JUMP_RANGE + 8, FLOOR_TOP - 90);
+        s.x = rng.int(SIDE_MARGIN, LOGICAL_WIDTH - SIDE_MARGIN - s.w);
+        if (!shelfConflicts(s, others)) break;
+      }
+    }
   }
 
   // Populate shelves, biasing items toward the two edges (the risky spots a
@@ -88,20 +117,22 @@ function layoutLevel(seed: number, tier: number): LevelDef {
   const pool = typePool(tier);
   const items: LevelItem[] = [];
   for (const s of shelves) {
-    const want = rng.int(1, Math.min(3, 1 + tier) + 1);
-    let lx = s.x + 6;
-    let rx = s.x + s.w - 6;
+    const want = rng.int(2, Math.min(3, 1 + tier) + 1);
+    const margin = 10;
+    const usable = s.w - 2 * margin;
+    const placed: { left: number; right: number }[] = [];
+    // Spread items across evenly spaced slots. The end slots sit near the risky
+    // edges, the middle slots are safer, so not every item is at risk.
     for (let k = 0; k < want; k++) {
       const type = rng.pick(pool);
       const spec = ITEM_CATALOG[type];
-      if (lx + spec.w > rx) break; // shelf full
-      if (k % 2 === 0) {
-        items.push({ type, surface: s.id, offsetX: lx + spec.w / 2 - s.x });
-        lx += spec.w + rng.int(6, 26);
-      } else {
-        items.push({ type, surface: s.id, offsetX: rx - spec.w / 2 - s.x });
-        rx -= spec.w + rng.int(6, 26);
-      }
+      const slot = margin + usable * ((k + 0.5) / want) + rng.int(-8, 9);
+      const cx = Math.max(margin + spec.w / 2, Math.min(slot, s.w - margin - spec.w / 2));
+      const left = cx - spec.w / 2;
+      const right = cx + spec.w / 2;
+      if (placed.some((p) => left < p.right + 4 && p.left - 4 < right)) continue; // would overlap
+      placed.push({ left, right });
+      items.push({ type, surface: s.id, offsetX: cx });
     }
   }
 
@@ -153,14 +184,15 @@ function simulateBreakCount(level: LevelDef): number {
  * too easy, so the final level is deterministic but guaranteed fair.
  */
 export function generateLevel(seed: number, tier: number): LevelDef {
+  const MAX_BUDGET = 8;
   for (let attempt = 0; attempt < 6; attempt++) {
     const level = layoutLevel(seed + attempt * 101, tier);
-    level.moves = 6;
+    level.moves = MAX_BUDGET;
     const audit = auditLevel(level);
     if (audit.trivial || !audit.solvable3) continue; // too easy, or (rarely) too hard at max budget
     // Smallest budget that still admits a 3★ solution (min 3 moves).
-    let chosen = 6;
-    for (const b of [3, 4, 5]) {
+    let chosen = MAX_BUDGET;
+    for (const b of [3, 4, 5, 6, 7]) {
       level.moves = b;
       if (auditLevel(level).solvable3) {
         chosen = b;
@@ -172,6 +204,6 @@ export function generateLevel(seed: number, tier: number): LevelDef {
   }
   // Fallback: a break-count budget on the base layout.
   const level = layoutLevel(seed, tier);
-  level.moves = Math.max(3, Math.min(6, simulateBreakCount(level)));
+  level.moves = Math.max(3, Math.min(MAX_BUDGET, simulateBreakCount(level)));
   return level;
 }

@@ -50,8 +50,7 @@ export const ITEM_CATALOG: Record<ItemType, ItemSpec> = {
   // A tall floor lamp. It is fine on the floor, but it is top-heavy, so if it is
   // knocked over it can topple into a shelf and take things out with it.
   floorLamp: { value: 55, fragile: true, w: 28, h: 96, weight: 2.8, color: '#d9b25f', label: 'Floor Lamp', baseAppeal: 6, shiny: false, floorOk: true },
-  // A stack of books or a potted plant can reasonably sit on the floor.
-  book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2, floorOk: true },
+  book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2, floorOk: false },
   // The pot is fragile, but a broken plant is half-salvageable.
   plant: { value: 8, fragile: true, breakRetain: 0.5, w: 38, h: 44, weight: 1.6, color: '#6db58a', label: 'Plant', baseAppeal: 3, dangle: true, floorOk: true },
 };
