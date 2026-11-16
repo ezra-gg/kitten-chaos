@@ -6,9 +6,30 @@
 
 export type KittenId = 'A' | 'B';
 
+/**
+ * A pronoun set, stored as data so a future customizer can let the player pick a
+ * preset (she/her, he/him, they/them) or enter fully custom pronouns.
+ */
+export interface Pronouns {
+  /** Subject: "she", "he", "they". */
+  subject: string;
+  /** Object: "her", "him", "them". */
+  object: string;
+  /** Possessive adjective: "her", "his", "their". */
+  possessive: string;
+  /** Reflexive: "herself", "himself", "themself". */
+  reflexive: string;
+}
+
+export const SHE: Pronouns = { subject: 'she', object: 'her', possessive: 'her', reflexive: 'herself' };
+export const HE: Pronouns = { subject: 'he', object: 'him', possessive: 'his', reflexive: 'himself' };
+export const THEY: Pronouns = { subject: 'they', object: 'them', possessive: 'their', reflexive: 'themself' };
+
 export interface KittenPersonality {
   id: KittenId;
   name: string;
+  /** Pronouns for this kitten, used in any generated text about them. */
+  pronouns: Pronouns;
   /** Base tabby coat color. */
   coat: string;
   /** Darker mackerel stripe color. */

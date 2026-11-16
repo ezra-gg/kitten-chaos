@@ -48,6 +48,37 @@ const TOOL_TIPS: Record<PrepTool, string> = {
   closeDoor: 'Click a cabinet to seal it. Anything inside stays safe. Costs 1.',
 };
 
+const HOWTO_HTML = `
+  <div class="kc-howto-card">
+    <h2>How to Play</h2>
+    <p>Two kittens are about to wake up. Your job is to protect the breakable
+      things in the room and save as much value as you can.</p>
+    <h3>Each round has three steps</h3>
+    <ul>
+      <li><b>Prep.</b> You have a few moves. Spend them to make the room safe.</li>
+      <li><b>Release the kittens.</b> They run wild for 30 seconds. You can only watch.</li>
+      <li><b>Score.</b> You earn points and 1 to 3 stars for how much you saved.</li>
+    </ul>
+    <h3>Your tools</h3>
+    <p>Which tools you have depends on the level. Hover a tool to see what it does.</p>
+    <ul>
+      <li><b>Relocate:</b> drag an item to a safer spot.</li>
+      <li><b>Putty:</b> stick an item down so the cats leave it alone.</li>
+      <li><b>Box:</b> a cardboard box a kitten will climb into and sit in.</li>
+      <li><b>Toy:</b> a toy mouse that lures the nearest kitten away.</li>
+      <li><b>Treat:</b> call both kittens to a bowl during the chaos.</li>
+      <li><b>Door:</b> close a cabinet to seal whatever is inside.</li>
+    </ul>
+    <h3>The cats</h3>
+    <ul>
+      <li><b>Bargie</b> is patient. She picks her moment and bats things off edges.</li>
+      <li><b>Beano</b> is rambunctious. He sprints around knocking things over.</li>
+    </ul>
+    <p class="tip">Tip: on a tough level you are not meant to save everything.
+      Protect the most valuable things first.</p>
+    <div class="done"><button class="kc-btn primary kc-howto-done">Got it</button></div>
+  </div>`;
+
 const STYLE = `
 .kc-ui { position: fixed; inset: 0; pointer-events: none; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #f4efe6; }
 .kc-ui button { pointer-events: auto; cursor: pointer; font: inherit; }
@@ -118,6 +149,21 @@ const STYLE = `
 .kc-tile-name { font-weight: 600; margin-bottom: 7px; }
 .kc-tile-stars { font-size: 1.1em; letter-spacing: 3px; }
 .kc-tile-note { color: #9ad0ff; font-size: 0.9em; }
+.kc-tagline { color: #cfc6de; max-width: 520px; text-align: center; margin: 0 0 14px; line-height: 1.4; }
+.kc-howto-btn { pointer-events: auto; cursor: pointer; background: #39324a; color: #f4efe6;
+  border: 1px solid #554b6e; border-radius: 10px; padding: 9px 18px; font: inherit; font-weight: 600; margin-bottom: 20px; }
+.kc-howto-btn:hover { background: #473d5e; }
+.kc-howto { position: absolute; inset: 0; pointer-events: auto; background: rgba(16,13,22,0.82);
+  display: none; align-items: center; justify-content: center; padding: 20px; z-index: 30; }
+.kc-howto.show { display: flex; }
+.kc-howto-card { background: #221c30; border: 1px solid #4a4160; border-radius: 16px; padding: 22px 26px;
+  max-width: 540px; max-height: 86vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.kc-howto-card h2 { margin: 0 0 10px; }
+.kc-howto-card h3 { margin: 16px 0 6px; color: #ffd166; font-size: 1em; }
+.kc-howto-card p { margin: 6px 0; line-height: 1.45; color: #e9e1f2; }
+.kc-howto-card ul { margin: 6px 0; padding-left: 20px; line-height: 1.5; color: #e9e1f2; }
+.kc-howto-card .tip { color: #9ad07a; }
+.kc-howto-card .done { margin-top: 16px; text-align: center; }
 `;
 
 /** DOM overlay: move counter + prep toolbar, chaos controls, and result screen. */
@@ -136,6 +182,7 @@ export class GameUI {
   private readonly treatDeployBtn: HTMLButtonElement;
   private readonly menu: HTMLDivElement;
   private readonly topMenuBtn: HTMLButtonElement;
+  private readonly howto: HTMLDivElement;
 
   constructor(parent: HTMLElement, cb: UICallbacks) {
     if (!document.getElementById('kc-style')) {
@@ -206,6 +253,17 @@ export class GameUI {
     this.topMenuBtn = button('Menu', 'kc-topmenu hidden', () => cb.onMenu());
     this.root.appendChild(this.topMenuBtn);
 
+    this.howto = el('div', 'kc-howto');
+    this.howto.innerHTML = HOWTO_HTML;
+    this.howto.addEventListener('click', (e) => {
+      // Close when the backdrop or the Got it button is clicked.
+      const target = e.target as HTMLElement;
+      if (target === this.howto || target.classList.contains('kc-howto-done')) {
+        this.howto.classList.remove('show');
+      }
+    });
+    this.root.appendChild(this.howto);
+
     parent.appendChild(this.root);
     this.setActiveTool('relocate');
   }
@@ -215,6 +273,10 @@ export class GameUI {
     this.menu.innerHTML = '';
     const h1 = document.createElement('h1');
     h1.textContent = 'Kitten Chaos';
+    const tagline = el('div', 'kc-tagline');
+    tagline.textContent =
+      'Two kittens are about to wake up. Kitten-proof the room, then watch what survives.';
+    const howtoBtn = button('How to Play', 'kc-howto-btn', () => this.showHowTo());
     const sub = el('div', 'sub');
     sub.textContent = 'Pick a room to protect';
     const grid = el('div', 'kc-grid');
@@ -239,12 +301,32 @@ export class GameUI {
       grid.appendChild(tile);
     }
 
-    this.menu.append(h1, sub, grid);
+    this.menu.append(h1, tagline, howtoBtn, sub, grid);
     this.menu.classList.add('show');
+
+    // Show the how-to automatically the first time someone plays.
+    let seen = false;
+    try {
+      seen = localStorage.getItem('kc-howto-seen') === '1';
+    } catch {
+      seen = false;
+    }
+    if (!seen) {
+      this.showHowTo();
+      try {
+        localStorage.setItem('kc-howto-seen', '1');
+      } catch {
+        // storage unavailable; the button is always there anyway
+      }
+    }
   }
 
   hideMenu(): void {
     this.menu.classList.remove('show');
+  }
+
+  showHowTo(): void {
+    this.howto.classList.add('show');
   }
 
   setTitle(name: string): void {
