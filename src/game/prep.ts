@@ -208,7 +208,8 @@ export class PrepController {
   // --- Snapping ------------------------------------------------------------
 
   private snapToSurface(it: Item): { x: number; y: number } {
-    const best = this.nearestSurface(it.body.position.x, it.body.position.y, it.spec.h / 2);
+    const allowFloor = it.spec.floorOk !== false;
+    const best = this.nearestSurface(it.body.position.x, it.body.position.y, it.spec.h / 2, allowFloor);
     if (!best) return { x: it.body.position.x, y: it.body.position.y };
     const left = best.spec.x + it.spec.w / 2;
     const right = best.spec.x + best.spec.w - it.spec.w / 2;
@@ -230,12 +231,14 @@ export class PrepController {
     return this.world.doors.some((d) => d.contains(cx, cy));
   }
 
-  private nearestSurface(x: number, y: number, halfH: number): Surface | undefined {
+  private nearestSurface(x: number, y: number, halfH: number, allowFloor = true): Surface | undefined {
     const bottom = y + halfH;
     let best: Surface | undefined;
     let bestScore = Infinity;
     for (const s of this.world.surfaces) {
       if (s.kind === 'wall') continue;
+      // Some items (a laptop, a mug) are never set on the floor.
+      if (s.kind === 'floor' && !allowFloor) continue;
       // Can't stuff the whole apartment into a cabinet: its shelves are off-limits
       // as relocate targets, so a closed door only protects its intended contents.
       if (this.insideCabinet(s)) continue;

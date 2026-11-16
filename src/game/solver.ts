@@ -83,17 +83,22 @@ function placeToyNearItems(world: PhysicsWorld): void {
   if (it) world.addAttractor(new Attractor('toy', it.body.position.x, it.body.position.y - it.spec.h / 2));
 }
 
-function relocateFar(world: PhysicsWorld, items: Item[]): void {
-  // Spread the items along the floor on the side away from the kittens.
+/** Relocate the floor-eligible items among `items` to safe floor spots. Returns
+ *  how many were actually moved (items that cannot go on the floor are skipped). */
+function relocateFar(world: PhysicsWorld, items: Item[]): number {
   const cx = kittenCentroidX(world);
   const farLeft = cx > LOGICAL_WIDTH / 2;
   let x = farLeft ? 60 : LOGICAL_WIDTH - 60;
   const step = farLeft ? 74 : -74;
+  let moved = 0;
   for (const it of items) {
+    if (it.spec.floorOk === false) continue; // never set these on the floor
     Matter.Body.setPosition(it.body, { x: Math.max(44, Math.min(x, LOGICAL_WIDTH - 44)), y: FLOOR_TOP - it.spec.h / 2 - 1 });
     it.relocated = true;
     x += step;
+    moved++;
   }
+  return moved;
 }
 
 // --- strategy portfolio -----------------------------------------------------
@@ -155,21 +160,27 @@ function plansFor(level: LevelDef): Plan[] {
   if (acts.includes('relocate')) {
     plans.push({
       name: 'relocate-far',
-      apply: (w) => {
-        const items = topItems(w).slice(0, Math.min(budget, w.items.length));
-        relocateFar(w, items);
-        return items.length;
-      },
+      apply: (w) => relocateFar(w, topItems(w).slice(0, Math.min(budget, w.items.length))),
     });
-    // Relocate the most valuable far, putty the rest with whatever remains.
+    // Protect each top item the best way: floor-eligible ones go to the floor,
+    // the rest get puttied, up to the move budget.
     if (acts.includes('putty')) {
       plans.push({
-        name: 'relocate+putty',
+        name: 'protect-each',
         apply: (w) => {
           const items = topItems(w);
-          const nReloc = Math.min(Math.ceil(budget / 2), items.length);
-          relocateFar(w, items.slice(0, nReloc));
-          const moves = nReloc + puttyTop(w, budget - nReloc);
+          const toFloor: Item[] = [];
+          let moves = 0;
+          for (const it of items) {
+            if (moves >= budget) break;
+            if (it.spec.floorOk !== false) {
+              toFloor.push(it);
+            } else {
+              it.putty();
+            }
+            moves++;
+          }
+          relocateFar(w, toFloor);
           return moves;
         },
       });

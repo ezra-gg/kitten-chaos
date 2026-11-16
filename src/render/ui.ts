@@ -90,7 +90,9 @@ const STYLE = `
 .kc-incidents { text-align: left; margin: 12px auto; max-height: 160px; overflow: auto; font-size: 0.9em; }
 .kc-incidents ul { margin: 0; padding-left: 4px; list-style: none; }
 .kc-incidents li { margin: 3px 0; }
-.kc-incidents .ok { color: #9ad07a; text-align: center; }
+.kc-incidents .ok { text-align: center; padding: 6px 0; }
+.kc-incidents .ok-big { color: #9ad07a; font-size: 1.25em; font-weight: 700; }
+.kc-incidents .ok-sub { color: #b8b0c8; font-size: 0.9em; margin-top: 3px; }
 .kc-result-btns { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 .kc-hint { position: absolute; bottom: 74px; left: 50%; transform: translateX(-50%);
   font-size: 0.85em; color: #b8b0c8; background: rgba(27,23,38,0.6); padding: 4px 10px; border-radius: 8px; max-width: 90vw; text-align: center; }
@@ -332,7 +334,7 @@ export class GameUI {
             return `<li>${icon} ${it.label} ${verb}${by}</li>`;
           })
           .join('')}</ul>`
-      : '<p class="ok">Nothing broke - a perfectly civilized evening.</p>';
+      : '<div class="ok"><div class="ok-big">Nothing broke!</div><div class="ok-sub">A perfectly civilized evening.</div></div>';
 
     const bestLine = data.isNewBest
       ? '<div class="kc-newbest">★ New best!</div>'

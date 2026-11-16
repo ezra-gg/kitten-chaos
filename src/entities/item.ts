@@ -30,6 +30,12 @@ export interface ItemSpec {
   shiny?: boolean;
   /** Cords/vines dangle, adding to appeal (used from M2). */
   dangle?: boolean;
+  /**
+   * Whether this item can be relocated onto the floor. A laptop or a mug would
+   * not be left sitting on the floor, so the floor is not a valid spot for them.
+   * Defaults to true when omitted.
+   */
+  floorOk?: boolean;
 }
 
 /**
@@ -37,13 +43,14 @@ export interface ItemSpec {
  * mug 10, vase 30, laptop 50, heirloom lamp 80.
  */
 export const ITEM_CATALOG: Record<ItemType, ItemSpec> = {
-  mug: { value: 10, fragile: true, w: 30, h: 28, weight: 1, color: '#d98c5f', label: 'Mug', baseAppeal: 4, shiny: false },
-  vase: { value: 30, fragile: true, w: 32, h: 54, weight: 1.4, color: '#5fa8d9', label: 'Vase', baseAppeal: 6, shiny: true },
-  laptop: { value: 50, fragile: true, w: 64, h: 42, weight: 3, color: '#b0b4bd', label: 'Laptop', baseAppeal: 5, shiny: true },
-  lamp: { value: 80, fragile: true, w: 36, h: 64, weight: 2.4, color: '#e8c85f', label: 'Heirloom Lamp', baseAppeal: 7, shiny: true },
-  book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2 },
+  mug: { value: 10, fragile: true, w: 30, h: 28, weight: 1, color: '#d98c5f', label: 'Mug', baseAppeal: 4, shiny: false, floorOk: false },
+  vase: { value: 30, fragile: true, w: 32, h: 54, weight: 1.4, color: '#5fa8d9', label: 'Vase', baseAppeal: 6, shiny: true, floorOk: true },
+  laptop: { value: 50, fragile: true, w: 64, h: 42, weight: 3, color: '#b0b4bd', label: 'Laptop', baseAppeal: 5, shiny: true, floorOk: false },
+  lamp: { value: 80, fragile: true, w: 36, h: 64, weight: 2.4, color: '#e8c85f', label: 'Heirloom Lamp', baseAppeal: 7, shiny: true, floorOk: false },
+  // A stack of books or a potted plant can reasonably sit on the floor.
+  book: { value: 5, fragile: false, w: 44, h: 16, weight: 1.8, color: '#7a9a6d', label: 'Book', baseAppeal: 2, floorOk: true },
   // The pot is fragile, but a broken plant is half-salvageable.
-  plant: { value: 8, fragile: true, breakRetain: 0.5, w: 38, h: 44, weight: 1.6, color: '#6db58a', label: 'Plant', baseAppeal: 3, dangle: true },
+  plant: { value: 8, fragile: true, breakRetain: 0.5, w: 38, h: 44, weight: 1.6, color: '#6db58a', label: 'Plant', baseAppeal: 3, dangle: true, floorOk: true },
 };
 
 let nextItemId = 1;
