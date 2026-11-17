@@ -2,7 +2,7 @@
   "id": "05-dinner-party",
   "name": "Dinner Party Prep",
   "seed": 505,
-  "moves": 5,
+  "moves": 4,
   "surfaces": [
     { "id": "table", "x": 200, "y": 340, "w": 560, "h": 16, "kind": "shelf" }
   ],

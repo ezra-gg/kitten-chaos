@@ -194,16 +194,21 @@ function simulateBreakCount(level: LevelDef): number {
  * too easy, so the final level is deterministic but guaranteed fair.
  */
 export function generateLevel(seed: number, tier: number): LevelDef {
-  for (let attempt = 0; attempt < 6; attempt++) {
+  for (let attempt = 0; attempt < 8; attempt++) {
     const level = layoutLevel(seed + attempt * 101, tier);
-    // Two cats make twice the mess, so they get more room in the move budget.
-    const maxBudget = level.kittens.length > 1 ? 10 : 8;
+    // The budget is always kept below the item count, so "just lock down every
+    // item" is never an affordable play. Two cats get a little more room.
+    const perCat = level.kittens.length > 1 ? 10 : 8;
+    const maxBudget = Math.min(perCat, level.items.length - 1);
+    if (maxBudget < 2) continue; // too few items for a fair sub-lockdown budget
     level.moves = maxBudget;
     const audit = auditLevel(level);
-    if (audit.trivial || !audit.solvable3) continue; // too easy, or (rarely) too hard at max budget
-    // Smallest budget that still admits a 3★ solution (min 3 moves).
+    // Reject trivial layouts, and layouts that can only be solved by acting on
+    // everything (no 3★ solution exists below the item count).
+    if (audit.trivial || !audit.solvable3) continue;
+    // Smallest budget that still admits a 3★ solution.
     let chosen = maxBudget;
-    for (let b = 3; b < maxBudget; b++) {
+    for (let b = 2; b < maxBudget; b++) {
       level.moves = b;
       if (auditLevel(level).solvable3) {
         chosen = b;
@@ -213,9 +218,9 @@ export function generateLevel(seed: number, tier: number): LevelDef {
     level.moves = chosen;
     return level;
   }
-  // Fallback: a break-count budget on the base layout.
+  // Fallback: a break-count budget on the base layout, still kept below items.
   const level = layoutLevel(seed, tier);
-  const maxBudget = level.kittens.length > 1 ? 10 : 8;
-  level.moves = Math.max(3, Math.min(maxBudget, simulateBreakCount(level)));
+  const cap = Math.max(2, level.items.length - 1);
+  level.moves = Math.max(2, Math.min(cap, simulateBreakCount(level)));
   return level;
 }

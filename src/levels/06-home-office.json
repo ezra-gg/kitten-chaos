@@ -2,7 +2,7 @@
   "id": "06-home-office",
   "name": "Home Office",
   "seed": 606,
-  "moves": 4,
+  "moves": 3,
   "surfaces": [
     { "id": "shelf1", "x": 120, "y": 340, "w": 280, "h": 14, "kind": "shelf" },
     { "id": "cab", "x": 572, "y": 392, "w": 160, "h": 12, "kind": "shelf" }

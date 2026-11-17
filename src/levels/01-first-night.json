@@ -2,7 +2,7 @@
   "id": "01-first-night",
   "name": "First Night",
   "seed": 1001,
-  "moves": 3,
+  "moves": 2,
   "surfaces": [
     { "id": "shelf1", "x": 330, "y": 330, "w": 300, "h": 14, "kind": "shelf" }
   ],

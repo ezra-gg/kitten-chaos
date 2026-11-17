@@ -49,11 +49,14 @@ describe('generateLevel', () => {
     expect(JSON.stringify(a.surfaces)).not.toEqual(JSON.stringify(b.surfaces));
   });
 
-  it('keeps the move budget in [3, 8]', () => {
-    for (let seed = 7000; seed < 7000 + 6 * 137; seed += 137) {
-      const lvl = generateLevel(seed, 3);
-      expect(lvl.moves).toBeGreaterThanOrEqual(3);
-      expect(lvl.moves).toBeLessThanOrEqual(8);
+  it('keeps the move budget sane and below the item count', () => {
+    for (let tier = 3; tier <= 8; tier++) {
+      const lvl = generateLevel(7000 + tier * 137, tier);
+      expect(lvl.moves).toBeGreaterThanOrEqual(2);
+      expect(lvl.moves).toBeLessThanOrEqual(10);
+      // Never enough moves to act on every item, so locking down everything is
+      // never an affordable solution.
+      expect(lvl.moves).toBeLessThan(lvl.items.length);
     }
   });
 

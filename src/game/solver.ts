@@ -177,7 +177,10 @@ function plansFor(level: LevelDef): Plan[] {
   if (acts.includes('relocate')) {
     plans.push({
       name: 'relocate-far',
-      apply: (w) => relocateFar(w, topItems(w).slice(0, Math.min(budget, w.items.length))),
+      // Pack the budget with the most valuable floor-eligible items. Spending a
+      // slot on something that cannot go on the floor just wastes it, so skip
+      // those here (protect-each handles them with putty).
+      apply: (w) => relocateFar(w, topItems(w).filter((it) => it.spec.floorOk !== false).slice(0, budget)),
     });
     // Protect each top item the best way: floor-eligible ones go to the floor,
     // the rest get puttied, up to the move budget.

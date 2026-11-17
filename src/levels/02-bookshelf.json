@@ -2,19 +2,19 @@
   "id": "02-bookshelf",
   "name": "The Bookshelf",
   "seed": 4242,
-  "moves": 5,
+  "moves": 4,
   "surfaces": [
     { "id": "shelf1", "x": 120, "y": 370, "w": 250, "h": 14, "kind": "shelf" },
-    { "id": "shelf2", "x": 470, "y": 260, "w": 250, "h": 14, "kind": "shelf" }
+    { "id": "shelf2", "x": 480, "y": 262, "w": 230, "h": 12, "kind": "shelf" }
   ],
-  "doors": [],
+  "doors": [{ "id": "cabinet", "x": 466, "y": 196, "w": 262, "h": 80 }],
   "items": [
     { "type": "mug", "surface": "shelf1", "offsetX": 60 },
     { "type": "vase", "surface": "shelf1", "offsetX": 200 },
-    { "type": "book", "surface": "shelf2", "offsetX": 50 },
-    { "type": "laptop", "surface": "shelf2", "offsetX": 140 },
-    { "type": "lamp", "surface": "shelf2", "offsetX": 212 }
+    { "type": "book", "surface": "shelf2", "offsetX": 40 },
+    { "type": "laptop", "surface": "shelf2", "offsetX": 120 },
+    { "type": "lamp", "surface": "shelf2", "offsetX": 196 }
   ],
   "kittens": [{ "who": "A", "surface": "shelf1", "offsetX": 24 }],
-  "actionsAvailable": ["relocate", "putty"]
+  "actionsAvailable": ["relocate", "putty", "closeDoor"]
 }
