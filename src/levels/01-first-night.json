@@ -10,8 +10,8 @@
   "items": [
     { "type": "plant", "surface": "shelf1", "offsetX": 40 },
     { "type": "vase", "surface": "shelf1", "offsetX": 150 },
-    { "type": "vase", "surface": "shelf1", "offsetX": 262 }
+    { "type": "mug", "surface": "shelf1", "offsetX": 272 }
   ],
   "kittens": [{ "who": "A", "surface": "shelf1", "offsetX": 24 }],
-  "actionsAvailable": ["relocate"]
+  "actionsAvailable": ["relocate", "putty"]
 }
