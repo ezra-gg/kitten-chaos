@@ -27,8 +27,10 @@ export const TIMING = {
   zoomiesSteps: 180,
   /** Zoomies sprint speed as a multiple of the kitten's walk speed. */
   zoomSpeedMul: 2.8,
-  /** A zoomies body-slam's knock, relative to a deliberate bat. */
-  zoomBumpFactor: 0.75,
+  /** Give-up cycles on one item before a kitten abandons it as undislodgeable. */
+  abandonAfter: 2,
   /** Fruitless wander cycles on an empty shelf before the kitten hops elsewhere. */
   boredomCycles: 2,
+  /** Steps on one surface before a kitten gets restless and wanders to another. */
+  restlessSteps: 330,
 } as const;

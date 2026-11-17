@@ -45,6 +45,11 @@ export const PUTTY_RESIST = 2;
 // this. This applies to falls onto a surface and hard slams into a wall. Matter's
 // speeds are px per 60 Hz step; a short drop is ~4-6, a fall to the floor is ~10+.
 export const BREAK_SPEED_THRESHOLD = 6.5;
+// Force of a zoomies body-slam, divided by an item's weight. A full-speed sprint
+// into something hits harder than a careful paw bat, so this is independent of
+// (and stronger than) a kitten's batStrength. Light items fly off; heavy ones
+// barely budge. This is the Zoomer's main way of causing chaos.
+export const ZOOM_SLAM_STRENGTH = 7.5;
 // Two items must crash into each other a good deal faster than that to break,
 // so gentle bumps and clustered items on the floor stay safe. Only a genuinely
 // fast collision (for example a heavy item knocked into another) shatters.

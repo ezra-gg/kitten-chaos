@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { ZOOM_SLAM_STRENGTH } from '../config/constants';
 import { KittenId, KittenPersonality } from '../config/kittens';
 import { Rng } from '../engine/rng';
 import { KittenState, TIMING } from '../ai/states';
@@ -43,6 +44,7 @@ export class Kitten {
   private zoomDir: 1 | -1 = 1;
   private zoomTimer = 0;
   private boredom = 0;
+  private surfaceTimer = 0;
   private lastSurface: Surface | undefined;
   private lure: Attractor | null = null;
   private distractPhase: 'travel' | 'hold' = 'travel';
@@ -101,6 +103,7 @@ export class Kitten {
   private canReach(item: Item, standing: Surface | undefined): boolean {
     if (this.world.isSealed(item)) return false; // locked in a closed cabinet
     if (item.puttied) return false; // stuck down; a smart cat won't bother
+    if (item.battedFailures >= TIMING.abandonAfter) return false; // can't budge it; move on
     const s = findSurfaceUnder(item, this.world.surfaces);
     if (!s) return false;
     if (s === standing) return true;
@@ -116,6 +119,7 @@ export class Kitten {
   // --- Main per-step update ------------------------------------------------
 
   update(): void {
+    this.surfaceTimer++; // time spent on the current surface; reset on landing
     switch (this.state) {
       case 'nap':
         this.napStep();
@@ -199,17 +203,29 @@ export class Kitten {
     const reached = this.walkToward(this.walkGoalX, s);
 
     if (--this.timer <= 0 || reached) {
-      // The Zoomer breaks into zoomies often; the Batter rarely.
-      if (this.rng.chance(this.cfg.zoomiesChance)) {
+      // The Zoomer breaks into zoomies often, the Batter rarely, but only when
+      // there is actually something on this surface to slam. No point sprinting
+      // back and forth across an empty shelf.
+      const prey = (it: Item) => this.canReach(it, s);
+      const hasLocalPrey = this.world.items.some((it) => findSurfaceUnder(it, this.world.surfaces) === s && prey(it));
+      if (hasLocalPrey && this.rng.chance(this.cfg.zoomiesChance)) {
         this.beginZoomies();
         return;
       }
-      const target = pickTarget(
-        { x: this.x, y: this.y },
-        this.world.items,
-        this.world.surfaces,
-        (it) => this.canReach(it, s),
-      );
+
+      // After a long stint on one surface, wander off to a livelier one even if
+      // something is still here, so she does not camp a single shelf all round.
+      if (this.surfaceTimer > TIMING.restlessSteps) {
+        const dest = this.pickExploreSurface(s);
+        if (dest) {
+          this.boredom = 0;
+          if (this.canJumpTo(dest)) this.beginJump(dest, null);
+          else this.walkGoalX = this.jumpOffToward(dest, s);
+          return;
+        }
+      }
+
+      const target = pickTarget({ x: this.x, y: this.y }, this.world.items, this.world.surfaces, prey);
       if (target) {
         this.boredom = 0;
         const ts = findSurfaceUnder(target, this.world.surfaces);
@@ -279,6 +295,7 @@ export class Kitten {
     let n = 0;
     for (const it of this.world.items) {
       if (it.broken || it.puttied || this.world.isSealed(it)) continue;
+      if (it.battedFailures >= TIMING.abandonAfter) continue; // given up on this one
       const s = findSurfaceUnder(it, this.world.surfaces);
       if (!s) continue;
       if (s === from || this.canHopBetween(from, s)) n++;
@@ -348,6 +365,7 @@ export class Kitten {
     if (u >= 1) {
       this.jump = null;
       this.boredom = 0; // fresh surface, fresh start
+      this.surfaceTimer = 0;
       if (this.target && !this.target.broken) {
         this.state = 'stalk';
         this.wiggleTimer = -1;
@@ -518,7 +536,7 @@ export class Kitten {
       if (Math.abs(item.body.position.x - this.x) < this.w / 2 + item.spec.w / 2) {
         if (item.puttied || this.world.isSealed(item)) continue; // held or sealed away
         if (item.bumpCooldown > 0) continue; // already knocked this pass
-        const knock = (this.cfg.batStrength * TIMING.zoomBumpFactor) / item.spec.weight;
+        const knock = ZOOM_SLAM_STRENGTH / item.spec.weight;
         Matter.Body.setVelocity(item.body, { x: this.zoomDir * knock, y: -1 });
         Matter.Sleeping.set(item.body, false);
         item.lastCulprit = this.who;
