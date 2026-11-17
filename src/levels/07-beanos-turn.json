@@ -1,0 +1,20 @@
+{
+  "id": "07-beanos-turn",
+  "name": "Beano's Turn",
+  "seed": 2207,
+  "moves": 4,
+  "surfaces": [
+    { "id": "low", "x": 150, "y": 380, "w": 240, "h": 14, "kind": "shelf" },
+    { "id": "high", "x": 540, "y": 232, "w": 240, "h": 14, "kind": "shelf" }
+  ],
+  "doors": [],
+  "items": [
+    { "type": "vase", "surface": "low", "offsetX": 60 },
+    { "type": "plant", "surface": "low", "offsetX": 180 },
+    { "type": "mug", "surface": "high", "offsetX": 50 },
+    { "type": "vase", "surface": "high", "offsetX": 130 },
+    { "type": "book", "surface": "high", "offsetX": 205 }
+  ],
+  "kittens": [{ "who": "B", "surface": "low", "offsetX": 30 }],
+  "actionsAvailable": ["relocate", "putty"]
+}

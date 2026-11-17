@@ -12,6 +12,7 @@ import level03 from '../levels/03-kitchen-counter.json';
 import level04 from '../levels/04-box-day.json';
 import level05 from '../levels/05-dinner-party.json';
 import level06 from '../levels/06-home-office.json';
+import levelBeano from '../levels/07-beanos-turn.json';
 
 export interface LevelSurface {
   id: string;
@@ -51,9 +52,12 @@ export interface LevelDef {
 }
 
 /** The hand-authored intro levels, in play order. */
+// Campaign order, not file order: Bargie solo, then Beano solo to introduce
+// her, then the levels where both cats are loose at once.
 export const HAND_LEVELS: LevelDef[] = [
   level01,
   level02,
+  levelBeano,
   level03,
   level04,
   level05,

@@ -1,5 +1,5 @@
 import { CHAOS_SECONDS, LOGICAL_HEIGHT, LOGICAL_WIDTH, PHYSICS_HZ } from '../config/constants';
-import { KITTENS } from '../config/kittens';
+import { KITTENS, KittenId } from '../config/kittens';
 import { Rng } from '../engine/rng';
 import { ITEM_CATALOG, ItemType } from '../entities/item';
 import { buildLevel, LevelDef, LevelItem, LevelKitten, LevelSurface } from './levels';
@@ -146,12 +146,18 @@ function layoutLevel(seed: number, tier: number): LevelDef {
     items.push({ type: 'floorLamp', surface: 'floor', offsetX: Math.max(44, Math.min(lx, LOGICAL_WIDTH - 44)) });
   }
 
-  // Start the kitten on a base shelf, right in the mix.
-  // Start the kitten on a random shelf at a varied spot, not always the left end,
-  // so it does not favor the left side of every room.
-  const startShelf = rng.pick(shelves);
-  const startOffset = rng.int(Math.round(startShelf.w * 0.2), Math.round(startShelf.w * 0.8));
-  const kittens: LevelKitten[] = [{ who: 'A', surface: startShelf.id, offsetX: startOffset }];
+  // Cast the kittens. Most rooms get one of the two; harder tiers sometimes turn
+  // both loose at once for double the mischief. Each starts on her own shelf at a
+  // varied spot, not always the left end, so rooms do not favor one side.
+  const twoCat = tier >= 4 && shelves.length >= 2 && rng.chance(0.25 + 0.05 * (tier - 4));
+  const cast: KittenId[] = twoCat ? ['A', 'B'] : rng.chance(0.5) ? ['A'] : ['B'];
+  const openShelves = [...shelves];
+  const kittens: LevelKitten[] = cast.map((who) => {
+    const idx = openShelves.length ? rng.int(0, openShelves.length) : -1;
+    const sh = idx >= 0 ? openShelves.splice(idx, 1)[0] : rng.pick(shelves);
+    const offsetX = rng.int(Math.round(sh.w * 0.2), Math.round(sh.w * 0.8));
+    return { who, surface: sh.id, offsetX };
+  });
 
   // Mix the seed's bits so nearby seeds get different names.
   const nameIdx = ((seed ^ (seed >>> 13)) * 2654435761) >>> 0;
@@ -188,15 +194,16 @@ function simulateBreakCount(level: LevelDef): number {
  * too easy, so the final level is deterministic but guaranteed fair.
  */
 export function generateLevel(seed: number, tier: number): LevelDef {
-  const MAX_BUDGET = 8;
   for (let attempt = 0; attempt < 6; attempt++) {
     const level = layoutLevel(seed + attempt * 101, tier);
-    level.moves = MAX_BUDGET;
+    // Two cats make twice the mess, so they get more room in the move budget.
+    const maxBudget = level.kittens.length > 1 ? 10 : 8;
+    level.moves = maxBudget;
     const audit = auditLevel(level);
     if (audit.trivial || !audit.solvable3) continue; // too easy, or (rarely) too hard at max budget
     // Smallest budget that still admits a 3★ solution (min 3 moves).
-    let chosen = MAX_BUDGET;
-    for (const b of [3, 4, 5, 6, 7]) {
+    let chosen = maxBudget;
+    for (let b = 3; b < maxBudget; b++) {
       level.moves = b;
       if (auditLevel(level).solvable3) {
         chosen = b;
@@ -208,6 +215,7 @@ export function generateLevel(seed: number, tier: number): LevelDef {
   }
   // Fallback: a break-count budget on the base layout.
   const level = layoutLevel(seed, tier);
-  level.moves = Math.max(3, Math.min(MAX_BUDGET, simulateBreakCount(level)));
+  const maxBudget = level.kittens.length > 1 ? 10 : 8;
+  level.moves = Math.max(3, Math.min(maxBudget, simulateBreakCount(level)));
   return level;
 }
